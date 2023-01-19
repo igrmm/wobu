@@ -26,5 +26,5 @@ if(MINGW)
     target_link_libraries(${PROJECT_NAME} PRIVATE mingw32)
 endif()
 
-list(INSERT LIBS 0 SDL2main)
+list(INSERT LIBS 0 m SDL2main)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
