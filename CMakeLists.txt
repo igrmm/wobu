@@ -14,6 +14,7 @@ endforeach()
 add_executable(${PROJECT_NAME}
     WIN32
     src/wobu.c
+    src/app.c
     )
 
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU")

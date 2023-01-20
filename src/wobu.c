@@ -7,6 +7,8 @@
 #define NK_SDL_RENDERER_IMPLEMENTATION
 #include "external/nuklear_sdl_renderer.h"
 
+#include "app.h"
+
 int main(int argc, char *argv[])
 {
     SDL_Window *win;
@@ -57,6 +59,9 @@ int main(int argc, char *argv[])
             nk_sdl_handle_event(&evt);
         }
         nk_input_end(ctx);
+
+        /* GUI */
+        app(ctx);
 
         /* Render */
         SDL_SetRenderDrawColor(renderer, 26.0f, 46.0f, 61.0f, 255.0f);
