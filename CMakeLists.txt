@@ -12,7 +12,7 @@ foreach(LIB IN LISTS LIBS)
 endforeach()
 
 add_executable(${PROJECT_NAME}
-    WIN32
+    #WIN32
     src/wobu.c
     src/app.c
     )
