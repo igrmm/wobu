@@ -48,6 +48,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
         nk_style_set_font(ctx, &font->handle);
     }
 
+    int exit_status = EXIT_SUCCESS;
     while (running) {
         /* Input */
         SDL_Event evt;
@@ -61,7 +62,11 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
         nk_input_end(ctx);
 
         /* GUI */
-        app_run(ctx);
+        if (!app_run(ctx)) {
+            SDL_Log("Failed to run app.");
+            exit_status = EXIT_FAILURE;
+            goto cleanup;
+        };
 
         /* Render */
         SDL_SetRenderDrawColor(renderer, 26.0f, 46.0f, 61.0f, 255.0f);
@@ -75,5 +80,5 @@ cleanup:
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(win);
     SDL_Quit();
-    return EXIT_SUCCESS;
+    return exit_status;
 }

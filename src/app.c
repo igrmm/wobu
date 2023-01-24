@@ -21,8 +21,11 @@ int app_run(struct nk_context *ctx)
     if (nk_begin(ctx, "wobu", nk_rect(20, 20, 200, 300), window_flags)) {
         nk_layout_row_dynamic(ctx, 20, 1);
         nk_label(ctx, "this is a window", NK_TEXT_LEFT);
+        nk_layout_row_dynamic(ctx, 20, 1);
+        if (nk_button_label(ctx, "exit failure"))
+            return 0;
     }
     nk_end(ctx);
 
-    return 0;
+    return 1;
 }
