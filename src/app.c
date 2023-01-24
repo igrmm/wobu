@@ -32,8 +32,9 @@ struct app *app_create(SDL_Renderer *renderer, struct nk_context *ctx)
     return app;
 }
 
-int app_run(struct nk_context *ctx)
+int app_run(struct app *app)
 {
+    struct nk_context *ctx = app->ctx;
     static int window_flags = 0;
     window_flags |= NK_WINDOW_BORDER;
     window_flags |= NK_WINDOW_SCALABLE;

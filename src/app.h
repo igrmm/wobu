@@ -7,6 +7,6 @@
 
 struct app;
 struct app *app_create(SDL_Renderer *renderer, struct nk_context *ctx);
-int app_run(struct nk_context *ctx);
+int app_run(struct app *app);
 
 #endif
