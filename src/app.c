@@ -3,6 +3,10 @@
 
 #include "app.h"
 
+static const int WINDOW_FLAGS = NK_WINDOW_BORDER | NK_WINDOW_SCALABLE |
+                                NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
+                                NK_WINDOW_CLOSABLE;
+
 struct app {
     SDL_Renderer *renderer;
     struct nk_context *ctx;
@@ -35,13 +39,7 @@ struct app *app_create(SDL_Renderer *renderer, struct nk_context *ctx)
 int app_run(struct app *app)
 {
     struct nk_context *ctx = app->ctx;
-    static int window_flags = 0;
-    window_flags |= NK_WINDOW_BORDER;
-    window_flags |= NK_WINDOW_SCALABLE;
-    window_flags |= NK_WINDOW_MOVABLE;
-    window_flags |= NK_WINDOW_MINIMIZABLE;
-    window_flags |= NK_WINDOW_BACKGROUND;
-    if (nk_begin(ctx, "wobu", nk_rect(20, 20, 200, 300), window_flags)) {
+    if (nk_begin(ctx, "wobu", nk_rect(20, 20, 200, 300), WINDOW_FLAGS)) {
         nk_layout_row_dynamic(ctx, 20, 1);
         nk_label(ctx, "this is a window", NK_TEXT_LEFT);
         nk_layout_row_dynamic(ctx, 20, 1);
