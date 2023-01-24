@@ -7,8 +7,30 @@ struct app {
     SDL_Renderer *renderer;
     struct nk_context *ctx;
     SDL_Texture *tileset_texture;
-    struct nk_image *tileset_image;
+    struct nk_image tileset_image;
 };
+
+struct app *app_create(SDL_Renderer *renderer, struct nk_context *ctx)
+{
+    SDL_Texture *tileset_texture = IMG_LoadTexture(renderer, "tileset.png");
+    if (!tileset_texture) {
+        SDL_Log("SDL error in tileset_texture creation: %s", SDL_GetError());
+        return NULL;
+    }
+
+    struct app *app = malloc(sizeof *app);
+    if (!app) {
+        SDL_Log("App error: unable to alloc memory.");
+        return NULL;
+    }
+
+    app->renderer = renderer;
+    app->ctx = ctx;
+    app->tileset_texture = tileset_texture;
+    app->tileset_image = nk_image_ptr(tileset_texture);
+
+    return app;
+}
 
 int app_run(struct nk_context *ctx)
 {
