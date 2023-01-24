@@ -11,6 +11,7 @@
 
 int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
 {
+    struct app *app;
     SDL_Window *win;
     SDL_Renderer *renderer;
     int running = 1;
@@ -49,6 +50,14 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
     }
 
     int exit_status = EXIT_SUCCESS;
+
+    app = app_create(renderer, ctx);
+    if (app == NULL) {
+        SDL_Log("Failed to create app.");
+        exit_status = EXIT_FAILURE;
+        goto cleanup;
+    }
+
     while (running) {
         /* Input */
         SDL_Event evt;
@@ -62,7 +71,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
         nk_input_end(ctx);
 
         /* GUI */
-        if (!app_run(ctx)) {
+        if (!app_run(app)) {
             SDL_Log("Failed to run app.");
             exit_status = EXIT_FAILURE;
             goto cleanup;
@@ -80,5 +89,6 @@ cleanup:
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(win);
     SDL_Quit();
+    app_destroy(app);
     return exit_status;
 }
