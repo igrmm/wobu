@@ -13,13 +13,13 @@ struct app {
 struct app *app_create(SDL_Renderer *renderer, struct nk_context *ctx)
 {
     SDL_Texture *tileset_texture = IMG_LoadTexture(renderer, "tileset.png");
-    if (!tileset_texture) {
+    if (tileset_texture == NULL) {
         SDL_Log("SDL error in tileset_texture creation: %s", SDL_GetError());
         return NULL;
     }
 
     struct app *app = malloc(sizeof *app);
-    if (!app) {
+    if (app == NULL) {
         SDL_Log("App error: unable to alloc memory.");
         return NULL;
     }
@@ -51,4 +51,15 @@ int app_run(struct app *app)
     nk_end(ctx);
 
     return 1;
+}
+
+void app_destroy(struct app *app)
+{
+    if (app != NULL) {
+        if (app->tileset_texture != NULL)
+            SDL_DestroyTexture(app->tileset_texture);
+
+        free(app);
+    }
+    IMG_Quit();
 }

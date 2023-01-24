@@ -8,5 +8,6 @@
 struct app;
 struct app *app_create(SDL_Renderer *renderer, struct nk_context *ctx);
 int app_run(struct app *app);
+void app_destroy(struct app *app);
 
 #endif
