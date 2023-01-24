@@ -1,3 +1,4 @@
+#include "SDL_video.h"
 #include <stdlib.h>
 
 #include <SDL2/SDL.h>
@@ -20,8 +21,9 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
 
     SDL_Init(SDL_INIT_VIDEO);
 
-    win = SDL_CreateWindow("wobu", SDL_WINDOWPOS_CENTERED,
-                           SDL_WINDOWPOS_CENTERED, 1200, 800, SDL_WINDOW_SHOWN);
+    win =
+        SDL_CreateWindow("wobu", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                         1200, 800, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 
     if (win == NULL) {
         SDL_Log("Error SDL_CreateWindow %s", SDL_GetError());
