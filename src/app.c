@@ -1,6 +1,16 @@
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+
 #include "app.h"
 
-int app(struct nk_context *ctx)
+struct app {
+    SDL_Renderer *renderer;
+    struct nk_context *ctx;
+    SDL_Texture *tileset_texture;
+    struct nk_image *tileset_image;
+};
+
+int app_run(struct nk_context *ctx)
 {
     static int window_flags = 0;
     window_flags |= NK_WINDOW_BORDER;

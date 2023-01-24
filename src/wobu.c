@@ -61,7 +61,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
         nk_input_end(ctx);
 
         /* GUI */
-        app(ctx);
+        app_run(ctx);
 
         /* Render */
         SDL_SetRenderDrawColor(renderer, 26.0f, 46.0f, 61.0f, 255.0f);

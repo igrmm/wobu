@@ -3,6 +3,7 @@
 
 #include "nk.h"
 
-int app(struct nk_context *ctx);
+struct app;
+int app_run(struct nk_context *ctx);
 
 #endif
