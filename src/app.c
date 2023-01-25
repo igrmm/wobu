@@ -12,20 +12,46 @@ struct app {
     struct nk_context *ctx;
     SDL_Texture *tileset_texture;
     struct nk_image tileset_image;
+    int tile_size;
 };
 
 static int tileset_window(struct app *app)
 {
     struct nk_context *ctx = app->ctx;
     struct nk_image tileset_image = app->tileset_image;
-    int w, h;
-    SDL_QueryTexture(app->tileset_texture, NULL, NULL, &w, &h);
+    int tile_size = app->tile_size;
+    struct nk_command_buffer *canvas;
+    int tileset_w, tileset_h;
+    SDL_QueryTexture(app->tileset_texture, NULL, NULL, &tileset_w, &tileset_h);
+
+    // backup padding
+    struct nk_vec2 padding_bkp = ctx->style.window.padding;
+    ctx->style.window.padding = nk_vec2(0, 0);
 
     if (nk_begin(ctx, "tileset", nk_rect(20, 20, 200, 200), WINDOW_FLAGS)) {
-        nk_layout_row_static(ctx, w, h, 1);
+        nk_layout_row_static(ctx, tileset_h, tileset_w, 1);
+        canvas = nk_window_get_canvas(ctx);
+        float x = canvas->clip.x, y = canvas->clip.y;
+
+        // draw tileset
         nk_image(ctx, tileset_image);
+
+        // draw grid
+        for (int i = 0; i <= tileset_w; i += tile_size) {
+            nk_stroke_line(canvas, x + i, y, x + i, y + tileset_h, 1.0f,
+                           nk_rgb(0, 0, 0));
+        }
+
+        for (int j = 0; j <= tileset_h; j += tile_size) {
+            nk_stroke_line(canvas, x, y + j, x + tileset_w, y + j, 1.0f,
+                           nk_rgb(0, 0, 0));
+        }
     }
     nk_end(ctx);
+
+    // restore padding
+    ctx->style.window.padding = padding_bkp;
+
     return 1;
 }
 
@@ -47,6 +73,7 @@ struct app *app_create(SDL_Renderer *renderer, struct nk_context *ctx)
     app->ctx = ctx;
     app->tileset_texture = tileset_texture;
     app->tileset_image = nk_image_ptr(tileset_texture);
+    app->tile_size = 32;
 
     return app;
 }
