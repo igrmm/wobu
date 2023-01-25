@@ -14,6 +14,21 @@ struct app {
     struct nk_image tileset_image;
 };
 
+static int tileset_window(struct app *app)
+{
+    struct nk_context *ctx = app->ctx;
+    struct nk_image tileset_image = app->tileset_image;
+    int w, h;
+    SDL_QueryTexture(app->tileset_texture, NULL, NULL, &w, &h);
+
+    if (nk_begin(ctx, "tileset", nk_rect(20, 20, 200, 200), WINDOW_FLAGS)) {
+        nk_layout_row_static(ctx, w, h, 1);
+        nk_image(ctx, tileset_image);
+    }
+    nk_end(ctx);
+    return 1;
+}
+
 struct app *app_create(SDL_Renderer *renderer, struct nk_context *ctx)
 {
     SDL_Texture *tileset_texture = IMG_LoadTexture(renderer, "tileset.png");
@@ -38,15 +53,7 @@ struct app *app_create(SDL_Renderer *renderer, struct nk_context *ctx)
 
 int app_run(struct app *app)
 {
-    struct nk_context *ctx = app->ctx;
-    if (nk_begin(ctx, "wobu", nk_rect(20, 20, 200, 300), WINDOW_FLAGS)) {
-        nk_layout_row_dynamic(ctx, 20, 1);
-        nk_label(ctx, "this is a window", NK_TEXT_LEFT);
-        nk_layout_row_dynamic(ctx, 20, 1);
-        if (nk_button_label(ctx, "exit failure"))
-            return 0;
-    }
-    nk_end(ctx);
+    tileset_window(app);
 
     return 1;
 }
