@@ -7,6 +7,8 @@ static const int WINDOW_FLAGS = NK_WINDOW_BORDER | NK_WINDOW_SCALABLE |
                                 NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
                                 NK_WINDOW_CLOSABLE;
 
+static const struct nk_color GREY = {45, 45, 45, 255};
+
 struct app {
     SDL_Renderer *renderer;
     struct nk_context *ctx;
@@ -37,15 +39,11 @@ static int tileset_window(struct app *app)
         nk_image(ctx, tileset_image);
 
         // draw grid
-        for (int i = 0; i <= tileset_w; i += tile_size) {
-            nk_stroke_line(canvas, x + i, y, x + i, y + tileset_h, 1.0f,
-                           nk_rgb(0, 0, 0));
-        }
+        for (int i = 0; i <= tileset_w; i += tile_size)
+            nk_stroke_line(canvas, x + i, y, x + i, y + tileset_h, 1.0f, GREY);
 
-        for (int j = 0; j <= tileset_h; j += tile_size) {
-            nk_stroke_line(canvas, x, y + j, x + tileset_w, y + j, 1.0f,
-                           nk_rgb(0, 0, 0));
-        }
+        for (int j = 0; j <= tileset_h; j += tile_size)
+            nk_stroke_line(canvas, x, y + j, x + tileset_w, y + j, 1.0f, GREY);
     }
     nk_end(ctx);
 
