@@ -2,18 +2,21 @@
 #include <SDL2/SDL_image.h>
 
 #include "app.h"
+#include "calc.h"
 
 static const int WINDOW_FLAGS = NK_WINDOW_BORDER | NK_WINDOW_SCALABLE |
                                 NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
                                 NK_WINDOW_CLOSABLE;
 
 static const struct nk_color GREY = {45, 45, 45, 255};
+static const struct nk_color GREEN = {0, 200, 150, 255};
 
 struct app {
     SDL_Renderer *renderer;
     struct nk_context *ctx;
     SDL_Texture *tileset_texture;
     struct nk_image tileset_image;
+    struct nk_vec2 tileset_selected;
     int tile_size;
 };
 
@@ -44,6 +47,28 @@ static int tileset_window(struct app *app)
 
         for (int j = 0; j <= tileset_h; j += tile_size)
             nk_stroke_line(canvas, x, y + j, x + tileset_w, y + j, 1.0f, GREY);
+
+        // select tile on click if contained by tileset bounds
+        float w = min(tileset_w, canvas->clip.w);
+        float h = min(tileset_h, canvas->clip.h);
+        if (nk_input_is_mouse_click_in_rect(&ctx->input, NK_BUTTON_LEFT,
+                                            nk_rect(x, y, w, h))) {
+            float tile_size = app->tile_size;
+            // todo: deal with scrollbars
+            struct nk_vec2 mpos = ctx->input.mouse.pos;
+            float tx = (int)((mpos.x - x) / tile_size) * tile_size;
+            float ty = (int)((mpos.y - y) / tile_size) * tile_size;
+            app->tileset_selected = nk_vec2(tx, ty);
+        }
+
+        if (app->tileset_selected.x >= 0 && app->tileset_selected.y >= 0) {
+            float tile_x = app->tileset_selected.x;
+            float tile_y = app->tileset_selected.y;
+            struct nk_rect tile =
+                nk_rect(x + tile_x, y + tile_y, tile_size, tile_size);
+            nk_fill_rect(canvas, tile, 0,
+                         nk_rgba(GREEN.r, GREEN.g, GREEN.b, 150));
+        }
     }
     nk_end(ctx);
 
@@ -71,6 +96,7 @@ struct app *app_create(SDL_Renderer *renderer, struct nk_context *ctx)
     app->ctx = ctx;
     app->tileset_texture = tileset_texture;
     app->tileset_image = nk_image_ptr(tileset_texture);
+    app->tileset_selected = nk_vec2(-1, -1);
     app->tile_size = 32;
 
     return app;
