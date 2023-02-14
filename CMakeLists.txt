@@ -16,6 +16,7 @@ add_executable(${PROJECT_NAME}
     src/wobu.c
     src/app.c
     src/calc.c
+    src/tilesetw.c
     )
 
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU")

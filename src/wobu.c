@@ -52,7 +52,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
 
     int exit_status = EXIT_SUCCESS;
 
-    app = app_create(renderer, ctx);
+    app = app_create(renderer);
     if (app == NULL) {
         SDL_Log("Failed to create app.");
         exit_status = EXIT_FAILURE;
@@ -72,7 +72,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
         nk_input_end(ctx);
 
         /* GUI */
-        if (!app_run(app)) {
+        if (!app_run(app, ctx)) {
             SDL_Log("Failed to run app.");
             exit_status = EXIT_FAILURE;
             goto cleanup;
