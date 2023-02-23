@@ -31,6 +31,13 @@ struct app *app_create(SDL_Renderer *renderer)
     return app;
 }
 
+void app_handle_event(SDL_Event *evt, struct app *app)
+{
+    if (evt->type == SDL_MOUSEBUTTONDOWN) {
+        SDL_Log("mouse button down");
+    }
+}
+
 int app_run(struct app *app, struct nk_context *ctx)
 {
     tileset_window(app, ctx, WINDOW_FLAGS);

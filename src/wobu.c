@@ -68,6 +68,9 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
                 goto cleanup;
 
             nk_sdl_handle_event(&evt);
+
+            if (!nk_item_is_any_active(ctx))
+                app_handle_event(&evt, app);
         }
         nk_input_end(ctx);
 

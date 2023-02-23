@@ -12,6 +12,7 @@ struct app {
 };
 
 struct app *app_create(SDL_Renderer *renderer);
+void app_handle_event(SDL_Event *evt, struct app *app);
 int app_run(struct app *app, struct nk_context *ctx);
 void app_destroy(struct app *app);
 
