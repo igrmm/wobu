@@ -2,6 +2,7 @@
 #include <SDL2/SDL_image.h>
 
 #include "app.h"
+#include "bgw.h"
 #include "calc.h"
 #include "colors.h"
 #include "tilesetw.h"
@@ -43,6 +44,11 @@ int app_run(struct app *app, struct nk_context *ctx)
     tileset_window(app, ctx, WINDOW_FLAGS);
 
     return 1;
+}
+
+void app_render(SDL_Renderer *renderer, struct app *app)
+{
+    bg_render(renderer, app);
 }
 
 void app_destroy(struct app *app)

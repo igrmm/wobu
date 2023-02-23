@@ -84,6 +84,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
         /* Render */
         SDL_SetRenderDrawColor(renderer, 26.0f, 46.0f, 61.0f, 255.0f);
         SDL_RenderClear(renderer);
+        app_render(renderer, app);
         nk_sdl_render(NK_ANTI_ALIASING_ON);
         SDL_RenderPresent(renderer);
     }
