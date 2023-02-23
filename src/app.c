@@ -28,6 +28,7 @@ struct app *app_create(SDL_Renderer *renderer)
     app->tileset_texture = tileset_texture;
     app->tileset_selected = nk_vec2(-1, -1);
     app->tile_size = 32;
+    app->world_size = 640;
 
     return app;
 }

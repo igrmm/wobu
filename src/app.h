@@ -9,6 +9,7 @@ struct app {
     SDL_Texture *tileset_texture;
     struct nk_vec2 tileset_selected;
     int tile_size;
+    int world_size;
 };
 
 struct app *app_create(SDL_Renderer *renderer);
