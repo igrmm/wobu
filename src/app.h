@@ -10,6 +10,7 @@ struct app {
     struct nk_vec2 tileset_selected;
     int tile_size;
     int world_size;
+    struct nk_vec2 bg_scroll_bkp, bg_scroll0, bg_scroll;
 };
 
 struct app *app_create(SDL_Renderer *renderer);

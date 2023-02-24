@@ -29,14 +29,26 @@ struct app *app_create(SDL_Renderer *renderer)
     app->tileset_selected = nk_vec2(-1, -1);
     app->tile_size = 32;
     app->world_size = 640;
+    app->bg_scroll = nk_vec2(0, 0);
 
     return app;
 }
 
 void app_handle_event(SDL_Event *evt, struct app *app)
 {
-    if (evt->type == SDL_MOUSEBUTTONDOWN) {
-        SDL_Log("mouse button down");
+    if (evt->button.button == SDL_BUTTON_MIDDLE) {
+        if (evt->type == SDL_MOUSEBUTTONDOWN) {
+            app->bg_scroll_bkp = app->bg_scroll;
+            app->bg_scroll0.x = evt->button.x;
+            app->bg_scroll0.y = evt->button.y;
+
+        } else if (evt->type == SDL_MOUSEMOTION) {
+            app->bg_scroll.x =
+                app->bg_scroll_bkp.x + evt->button.x - app->bg_scroll0.x;
+
+            app->bg_scroll.y =
+                app->bg_scroll_bkp.y + evt->button.y - app->bg_scroll0.y;
+        }
     }
 }
 
