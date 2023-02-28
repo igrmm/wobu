@@ -75,6 +75,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
         nk_input_end(ctx);
 
         /* GUI */
+        SDL_GL_GetDrawableSize(win, &app->screen_width, &app->screen_height);
         if (!app_run(app, ctx)) {
             SDL_Log("Failed to run app.");
             exit_status = EXIT_FAILURE;

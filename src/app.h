@@ -6,6 +6,7 @@
 #include "nk.h"
 
 struct app {
+    int screen_width, screen_height;
     SDL_Texture *tileset_texture;
     struct nk_vec2 tileset_selected;
     int tile_size;
