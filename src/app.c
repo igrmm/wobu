@@ -5,6 +5,7 @@
 #include "bgw.h"
 #include "calc.h"
 #include "colors.h"
+#include "statusw.h"
 #include "tilesetw.h"
 
 static const int WINDOW_FLAGS = NK_WINDOW_BORDER | NK_WINDOW_SCALABLE |
@@ -55,6 +56,7 @@ void app_handle_event(SDL_Event *evt, struct app *app)
 int app_run(struct app *app, struct nk_context *ctx)
 {
     tileset_window(app, ctx, WINDOW_FLAGS);
+    status_window(app, ctx);
 
     return 1;
 }
