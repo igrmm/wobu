@@ -5,6 +5,12 @@
 
 #include "nk.h"
 
+struct fps_counter {
+    int frames;
+    Uint32 timer;
+    char fps[9];
+};
+
 struct app {
     int screen_width, screen_height;
     SDL_Texture *tileset_texture;
@@ -12,6 +18,7 @@ struct app {
     int tile_size;
     int world_size;
     struct nk_vec2 bg_scroll_bkp, bg_scroll0, bg_scroll;
+    struct fps_counter fps_counter;
 };
 
 struct app *app_create(SDL_Renderer *renderer);

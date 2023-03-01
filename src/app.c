@@ -31,6 +31,8 @@ struct app *app_create(SDL_Renderer *renderer)
     app->tile_size = 32;
     app->world_size = 640;
     app->bg_scroll = nk_vec2(0, 0);
+    app->fps_counter.frames = 0;
+    app->fps_counter.timer = SDL_GetTicks64();
 
     return app;
 }
