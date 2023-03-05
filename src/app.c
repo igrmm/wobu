@@ -5,6 +5,7 @@
 #include "bgw.h"
 #include "calc.h"
 #include "colors.h"
+#include "map.h"
 #include "statusw.h"
 #include "tilesetw.h"
 
@@ -26,10 +27,15 @@ struct app *app_create(SDL_Renderer *renderer)
         return NULL;
     }
 
+    app->map = map_create();
+    if (app->map == NULL) {
+        SDL_Log("Map error: unable to alloc memory.");
+        app_destroy(app);
+        return NULL;
+    }
+
     app->tileset_texture = tileset_texture;
     app->tileset_selected = nk_vec2(-1, -1);
-    app->tile_size = 32;
-    app->world_size = 20;
     app->bg_scroll = nk_vec2(0, 0);
     app->fps_counter.frames = 0;
     app->fps_counter.timer = SDL_GetTicks64();
@@ -73,6 +79,9 @@ void app_destroy(struct app *app)
     if (app != NULL) {
         if (app->tileset_texture != NULL)
             SDL_DestroyTexture(app->tileset_texture);
+
+        if (app->map != NULL)
+            free(app->map);
 
         free(app);
     }

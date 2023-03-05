@@ -8,16 +8,18 @@ static void select_tile_on_click(struct app *app, struct nk_context *ctx,
 {
     if (nk_input_is_mouse_click_in_rect(&ctx->input, NK_BUTTON_LEFT,
                                         tileset_rect)) {
+        int tile_size = app->map->tile_size;
+
         float tileset_selected_x =
             (int)((ctx->input.mouse.pos.x - tileset_rect.x +
                    ctx->current->scrollbar.x) /
-                  app->tile_size) *
-            app->tile_size;
+                  tile_size) *
+            tile_size;
         float tileset_selected_y =
             (int)((ctx->input.mouse.pos.y - tileset_rect.y +
                    ctx->current->scrollbar.y) /
-                  app->tile_size) *
-            app->tile_size;
+                  tile_size) *
+            tile_size;
 
         // sets the x,y position of selected tile in tileset
         app->tileset_selected = nk_vec2(tileset_selected_x, tileset_selected_y);
@@ -29,13 +31,14 @@ static void render(struct app *app, struct nk_context *ctx,
                    struct nk_rect tileset_rect)
 {
     struct nk_image tileset_image = nk_image_ptr(app->tileset_texture);
+    int tile_size = app->map->tile_size;
 
     // draw tileset
     nk_image(ctx, tileset_image);
 
     // draw grid - column lines
     int cols = tileset_rect.w + ctx->current->scrollbar.x;
-    for (int col = 0; col <= cols; col += app->tile_size) {
+    for (int col = 0; col <= cols; col += tile_size) {
         float col0_x = tileset_rect.x + col - ctx->current->scrollbar.x;
         float col0_y = tileset_rect.y;
         float col1_x = tileset_rect.x + col - ctx->current->scrollbar.x;
@@ -46,7 +49,7 @@ static void render(struct app *app, struct nk_context *ctx,
 
     // draw grid - row lines
     int rows = tileset_rect.h + ctx->current->scrollbar.y;
-    for (int row = 0; row <= rows; row += app->tile_size) {
+    for (int row = 0; row <= rows; row += tile_size) {
         float row0_x = tileset_rect.x;
         float row0_y = tileset_rect.y + row - ctx->current->scrollbar.y;
         float row1_x = tileset_rect.x + tileset_rect.w;
@@ -62,10 +65,9 @@ static void render(struct app *app, struct nk_context *ctx,
         float green_rect_y = tileset_rect.y + app->tileset_selected.y -
                              ctx->current->scrollbar.y;
 
-        nk_fill_rect(
-            canvas,
-            nk_rect(green_rect_x, green_rect_y, app->tile_size, app->tile_size),
-            0, nk_rgba(GREEN.r, GREEN.g, GREEN.b, 150));
+        nk_fill_rect(canvas,
+                     nk_rect(green_rect_x, green_rect_y, tile_size, tile_size),
+                     0, nk_rgba(GREEN.r, GREEN.g, GREEN.b, 150));
     }
 }
 

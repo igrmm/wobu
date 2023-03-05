@@ -19,6 +19,7 @@ add_executable(${PROJECT_NAME}
     src/tilesetw.c
     src/bgw.c
     src/statusw.c
+    src/map.c
     )
 
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
