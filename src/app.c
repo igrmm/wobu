@@ -45,20 +45,7 @@ struct app *app_create(SDL_Renderer *renderer)
 
 void app_handle_event(SDL_Event *evt, struct app *app)
 {
-    if (evt->button.button == SDL_BUTTON_MIDDLE) {
-        if (evt->type == SDL_MOUSEBUTTONDOWN) {
-            app->bg_scroll_bkp = app->bg_scroll;
-            app->bg_scroll0.x = evt->button.x;
-            app->bg_scroll0.y = evt->button.y;
-
-        } else if (evt->type == SDL_MOUSEMOTION) {
-            app->bg_scroll.x =
-                app->bg_scroll_bkp.x + evt->button.x - app->bg_scroll0.x;
-
-            app->bg_scroll.y =
-                app->bg_scroll_bkp.y + evt->button.y - app->bg_scroll0.y;
-        }
-    }
+    bg_handle_event(evt, app);
 }
 
 int app_run(struct app *app, struct nk_context *ctx)

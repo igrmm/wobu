@@ -5,6 +5,7 @@
 
 #include "app.h"
 
+void bg_handle_event(SDL_Event *evt, struct app *app);
 void bg_render(SDL_Renderer *renderer, struct app *app);
 
 #endif

@@ -3,6 +3,24 @@
 #include "app.h"
 #include "bgw.h"
 
+void bg_handle_event(SDL_Event *evt, struct app *app)
+{
+    if (evt->button.button == SDL_BUTTON_MIDDLE) {
+        if (evt->type == SDL_MOUSEBUTTONDOWN) {
+            app->bg_scroll_bkp = app->bg_scroll;
+            app->bg_scroll0.x = evt->button.x;
+            app->bg_scroll0.y = evt->button.y;
+
+        } else if (evt->type == SDL_MOUSEMOTION) {
+            app->bg_scroll.x =
+                app->bg_scroll_bkp.x + evt->button.x - app->bg_scroll0.x;
+
+            app->bg_scroll.y =
+                app->bg_scroll_bkp.y + evt->button.y - app->bg_scroll0.y;
+        }
+    }
+}
+
 void bg_render(SDL_Renderer *renderer, struct app *app)
 {
     SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
