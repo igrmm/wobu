@@ -40,19 +40,6 @@ void bg_render(SDL_Renderer *renderer, struct app *app)
     SDL_Rect srcrect = {0, 0, tile_size, tile_size};
     SDL_Rect dstrect = {0, 0, tile_size, tile_size};
 
-    int cols = map_size + 1;
-    for (int col = 0; col < cols; col++)
-        SDL_RenderDrawLine(renderer, col * tile_size + app->bg_scroll.x,
-                           app->bg_scroll.y, col * tile_size + app->bg_scroll.x,
-                           map_size * tile_size + app->bg_scroll.y);
-
-    int rows = map_size + 1;
-    for (int row = 0; row < rows; row++)
-        SDL_RenderDrawLine(renderer, app->bg_scroll.x,
-                           row * tile_size + app->bg_scroll.y,
-                           map_size * tile_size + app->bg_scroll.x,
-                           row * tile_size + app->bg_scroll.y);
-
     for (int i = 0; i < TILES_MAX; i++) {
         for (int j = 0; j < TILES_MAX; j++) {
             srcrect.x = app->map->tiles[i][j].x;
@@ -65,4 +52,17 @@ void bg_render(SDL_Renderer *renderer, struct app *app)
             }
         }
     }
+
+    int cols = map_size + 1;
+    for (int col = 0; col < cols; col++)
+        SDL_RenderDrawLine(renderer, col * tile_size + app->bg_scroll.x,
+                           app->bg_scroll.y, col * tile_size + app->bg_scroll.x,
+                           map_size * tile_size + app->bg_scroll.y);
+
+    int rows = map_size + 1;
+    for (int row = 0; row < rows; row++)
+        SDL_RenderDrawLine(renderer, app->bg_scroll.x,
+                           row * tile_size + app->bg_scroll.y,
+                           map_size * tile_size + app->bg_scroll.x,
+                           row * tile_size + app->bg_scroll.y);
 }
