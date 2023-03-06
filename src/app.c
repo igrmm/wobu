@@ -33,7 +33,7 @@ struct app *app_create(SDL_Renderer *renderer)
         app_destroy(app);
         return NULL;
     }
-    SDL_Log("Map allocated memory: %llu kB", sizeof *app->map / 1024);
+    SDL_Log("Map allocated memory: %lu kB", sizeof *app->map / 1024);
 
     app->tileset_texture = tileset_texture;
     app->tileset_selected = nk_vec2(-1, -1);
