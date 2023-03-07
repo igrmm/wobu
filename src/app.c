@@ -41,6 +41,7 @@ struct app *app_create(SDL_Renderer *renderer)
     app->bg_scroll = nk_vec2(0, 0);
     app->fps_counter.frames = 0;
     app->fps_counter.timer = SDL_GetTicks64();
+    app->show_tilesetw = 1;
 
     return app;
 }
@@ -52,7 +53,9 @@ void app_handle_event(SDL_Event *evt, struct app *app)
 
 int app_run(struct app *app, struct nk_context *ctx)
 {
-    tileset_window(app, ctx, WINDOW_FLAGS);
+    if (app->show_tilesetw)
+        tileset_window(app, ctx, WINDOW_FLAGS);
+
     status_window(app, ctx);
     menu_window(app, ctx);
 

@@ -92,6 +92,8 @@ int tileset_window(struct app *app, struct nk_context *ctx, const int flags)
 
         select_tile_on_click(app, ctx, tileset_rect);
         render(app, ctx, canvas, tileset_rect);
+    } else {
+        app->show_tilesetw = 0;
     }
     nk_end(ctx);
 
