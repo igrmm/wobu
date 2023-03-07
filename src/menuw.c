@@ -1,5 +1,7 @@
-#include "menuw.h"
+#include <stdio.h>
+
 #include "app.h"
+#include "menuw.h"
 
 int menu_window(struct app *app, struct nk_context *ctx)
 {
@@ -10,13 +12,20 @@ int menu_window(struct app *app, struct nk_context *ctx)
 
     if (nk_begin(ctx, "menu", nk_rect(x, y, w, h), NK_WINDOW_NO_SCROLLBAR)) {
         nk_menubar_begin(ctx);
-
-        nk_layout_row_dynamic(ctx, h, 1);
+        nk_layout_row_static(ctx, h, 45, 1);
 
         if (nk_menu_begin_label(ctx, "view", NK_TEXT_ALIGN_LEFT,
                                 nk_vec2(100, 100))) {
             nk_layout_row_dynamic(ctx, h, 1);
-            nk_menu_item_label(ctx, "tileset", NK_TEXT_LEFT);
+
+            // tileset window
+            char tilesetw_title[] = "*tileset";
+            if (!app->show_tilesetw)
+                snprintf(tilesetw_title, sizeof tilesetw_title, " tileset");
+
+            if (nk_menu_item_label(ctx, tilesetw_title, NK_TEXT_LEFT))
+                app->show_tilesetw = !app->show_tilesetw;
+
             nk_menu_end(ctx);
         }
 
