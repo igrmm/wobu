@@ -36,9 +36,16 @@ struct app *app_create(SDL_Renderer *renderer)
     }
     SDL_Log("Map allocated memory: %i kB", (int)sizeof *app->map / 1024);
 
+    // centralize bg
+    SDL_GetRendererOutputSize(renderer, &app->screen_width,
+                              &app->screen_height);
+    int map_size = app->map->size * app->map->tile_size;
+    int bg_scroll_x = (app->screen_width - map_size) / 2;
+    int bg_scroll_y = (app->screen_height - map_size) / 2;
+
     app->tileset_texture = tileset_texture;
     app->tileset_selected = nk_vec2(-1, -1);
-    app->bg_scroll = nk_vec2(0, 0);
+    app->bg_scroll = nk_vec2(bg_scroll_x, bg_scroll_y);
     app->fps_counter.frames = 0;
     app->fps_counter.timer = SDL_GetTicks64();
     app->show_tilesetw = 1;
