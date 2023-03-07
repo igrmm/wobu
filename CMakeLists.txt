@@ -19,6 +19,7 @@ add_executable(${PROJECT_NAME}
     src/tilesetw.c
     src/bgw.c
     src/statusw.c
+    src/menuw.c
     src/map.c
     )
 

@@ -6,6 +6,7 @@
 #include "calc.h"
 #include "colors.h"
 #include "map.h"
+#include "menuw.h"
 #include "statusw.h"
 #include "tilesetw.h"
 
@@ -53,6 +54,7 @@ int app_run(struct app *app, struct nk_context *ctx)
 {
     tileset_window(app, ctx, WINDOW_FLAGS);
     status_window(app, ctx);
+    menu_window(app, ctx);
 
     return 1;
 }
