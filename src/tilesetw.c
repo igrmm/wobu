@@ -80,7 +80,7 @@ int tileset_window(struct app *app, struct nk_context *ctx, const int flags)
     struct nk_vec2 padding_bkp = ctx->style.window.padding;
     ctx->style.window.padding = nk_vec2(0, 0);
 
-    if (nk_begin(ctx, "tileset", nk_rect(20, 20, 200, 200), flags)) {
+    if (nk_begin(ctx, "tileset", nk_rect(20, 40, 200, 200), flags)) {
         nk_layout_row_static(ctx, tileset_h, tileset_w, 1);
 
         struct nk_command_buffer *canvas = nk_window_get_canvas(ctx);
