@@ -22,9 +22,15 @@ void bg_handle_event(SDL_Event *evt, struct app *app)
 
     if (evt->button.button == SDL_BUTTON_LEFT &&
         (evt->type == SDL_MOUSEBUTTONDOWN || evt->type == SDL_MOUSEMOTION)) {
-        int tile_x = (evt->button.x - app->bg_scroll.x) / app->map->tile_size;
-        int tile_y = (evt->button.y - app->bg_scroll.y) / app->map->tile_size;
-        if (tile_x < app->map->size && tile_y < app->map->size) {
+        int map_size_px = app->map->size * app->map->tile_size;
+        SDL_Rect grid_rect = {app->bg_scroll.x, app->bg_scroll.y, map_size_px,
+                              map_size_px};
+        SDL_Point mouse_pos = {evt->button.x, evt->button.y};
+
+        if (SDL_PointInRect(&mouse_pos, &grid_rect)) {
+            int tile_x = (mouse_pos.x - grid_rect.x) / app->map->tile_size;
+            int tile_y = (mouse_pos.y - grid_rect.y) / app->map->tile_size;
+
             app->map->tiles[tile_x][tile_y].x = app->tileset_selected.x;
             app->map->tiles[tile_x][tile_y].y = app->tileset_selected.y;
         }
