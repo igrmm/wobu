@@ -12,5 +12,6 @@ struct map {
 };
 
 struct map *map_create(void);
+int map_serialize(struct map *map, const char *path);
 
 #endif

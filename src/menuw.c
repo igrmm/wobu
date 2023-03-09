@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "app.h"
+#include "map.h"
 #include "menuw.h"
 
 int menu_window(struct app *app, struct nk_context *ctx)
@@ -12,7 +13,17 @@ int menu_window(struct app *app, struct nk_context *ctx)
 
     if (nk_begin(ctx, "menu", nk_rect(x, y, w, h), NK_WINDOW_NO_SCROLLBAR)) {
         nk_menubar_begin(ctx);
-        nk_layout_row_static(ctx, h, 45, 1);
+        nk_layout_row_static(ctx, h, 45, 2);
+
+        if (nk_menu_begin_label(ctx, "file", NK_TEXT_ALIGN_LEFT,
+                                nk_vec2(100, 100))) {
+            nk_layout_row_dynamic(ctx, h, 1);
+
+            if (nk_menu_item_label(ctx, "save", NK_TEXT_LEFT))
+                map_serialize(app->map, "start.wb");
+
+            nk_menu_end(ctx);
+        }
 
         if (nk_menu_begin_label(ctx, "view", NK_TEXT_ALIGN_LEFT,
                                 nk_vec2(100, 100))) {
