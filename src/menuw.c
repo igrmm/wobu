@@ -22,6 +22,9 @@ int menu_window(struct app *app, struct nk_context *ctx)
             if (nk_menu_item_label(ctx, "save", NK_TEXT_LEFT))
                 map_serialize(app->map, "start.wb");
 
+            if (nk_menu_item_label(ctx, "load", NK_TEXT_LEFT))
+                map_deserialize(app->map, "start.wb");
+
             nk_menu_end(ctx);
         }
 

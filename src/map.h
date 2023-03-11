@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 
 #define TILES_MAX 100
+#define JSON_STRING_BUFSIZ 1000000
 
 struct map {
     int size;
@@ -13,5 +14,6 @@ struct map {
 
 struct map *map_create(void);
 int map_serialize(struct map *map, const char *path);
+int map_deserialize(struct map *map, const char *path);
 
 #endif
