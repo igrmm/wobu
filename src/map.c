@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "external/json.h"
+
 #include "map.h"
 
 struct map *map_create(void)
@@ -85,7 +87,51 @@ int map_deserialize(struct map *map, const char *path)
     buffer[mem] = 0;
 
     SDL_Log("Map loaded: %ib - %ims", mem, (int)(SDL_GetTicks64() - now));
-    SDL_Log("%s", buffer);
+
+    // todo: json error handling
+
+    struct json_value_s *json = json_parse(buffer, mem);
+    struct json_object_s *json_root = (struct json_object_s *)json->payload;
+    struct json_object_element_s *layer_object = json_root->start;
+    struct json_array_s *layer_array = json_value_as_array(layer_object->value);
+
+    int map_size = (int)layer_array->length;
+    if (map_size < 0 || map_size > TILES_MAX) {
+        SDL_Log("Error: Map size buffer overflow: %i tiles", map_size);
+        return 0;
+    }
+
+    struct json_array_element_s *tile_object = layer_array->start;
+    for (int i = 0; i < map_size; i++) {
+        struct json_array_s *tile_array =
+            json_value_as_array(tile_object->value);
+
+        struct json_array_element_s *x_object = tile_array->start;
+        struct json_number_s *x_number = json_value_as_number(x_object->value);
+        int x = strtol(x_number->number, NULL, 10);
+
+        struct json_array_element_s *y_object = x_object->next;
+        struct json_number_s *y_number = json_value_as_number(y_object->value);
+        int y = strtol(y_number->number, NULL, 10);
+
+        struct json_array_element_s *tileset_x_object = y_object->next;
+        struct json_number_s *tileset_x_number =
+            json_value_as_number(tileset_x_object->value);
+        int tileset_x = strtol(tileset_x_number->number, NULL, 10);
+
+        struct json_array_element_s *tileset_y_object = tileset_x_object->next;
+        struct json_number_s *tileset_y_number =
+            json_value_as_number(tileset_y_object->value);
+        int tileset_y = strtol(tileset_y_number->number, NULL, 10);
+
+        map->tiles[x][y].x = tileset_x;
+        map->tiles[x][y].y = tileset_y;
+
+        tile_object = tile_object->next;
+    }
+    map->size = map_size;
+
+    free(json);
 
     return 1;
 }
