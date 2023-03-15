@@ -95,14 +95,14 @@ int map_deserialize(struct map *map, const char *path)
     struct json_object_element_s *layer_object = json_root->start;
     struct json_array_s *layer_array = json_value_as_array(layer_object->value);
 
-    int map_size = (int)layer_array->length;
-    if (map_size < 0 || map_size > TILES_MAX) {
-        SDL_Log("Error: Map size buffer overflow: %i tiles", map_size);
+    int total_tiles = (int)layer_array->length;
+    if (total_tiles < 0 || total_tiles > (TILES_MAX * TILES_MAX)) {
+        SDL_Log("Error: Map size buffer overflow: %i tiles", total_tiles);
         return 0;
     }
 
     struct json_array_element_s *tile_object = layer_array->start;
-    for (int i = 0; i < map_size; i++) {
+    for (int i = 0; i < total_tiles; i++) {
         struct json_array_s *tile_array =
             json_value_as_array(tile_object->value);
 
@@ -129,7 +129,6 @@ int map_deserialize(struct map *map, const char *path)
 
         tile_object = tile_object->next;
     }
-    map->size = map_size;
 
     free(json);
 
