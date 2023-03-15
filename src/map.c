@@ -5,6 +5,15 @@
 
 #include "map.h"
 
+static void map_reset_tiles(struct map *map)
+{
+    for (int i = 0; i < TILES_MAX; i++) {
+        for (int j = 0; j < TILES_MAX; j++) {
+            map->tiles[i][j].x = map->tiles[i][j].y = -1;
+        }
+    }
+}
+
 struct map *map_create(void)
 {
     struct map *map = malloc(sizeof *map);
@@ -14,11 +23,7 @@ struct map *map_create(void)
     map->tile_size = 32;
     map->size = 20;
 
-    for (int i = 0; i < TILES_MAX; i++) {
-        for (int j = 0; j < TILES_MAX; j++) {
-            map->tiles[i][j].x = map->tiles[i][j].y = -1;
-        }
-    }
+    map_reset_tiles(map);
 
     return map;
 }
@@ -102,6 +107,8 @@ int map_deserialize(struct map *map, const char *path)
         SDL_Log("Error: Map size buffer overflow: %i tiles", total_tiles);
         return 0;
     }
+
+    map_reset_tiles(map);
 
     struct json_array_element_s *tile_object = layer_array->start;
     for (int i = 0; i < total_tiles; i++) {
