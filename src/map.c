@@ -75,6 +75,8 @@ int map_deserialize(struct map *map, const char *path)
         return 0;
     }
 
+    SDL_Log("Map deserialization started.");
+
     char buffer[JSON_STRING_BUFSIZ + 1] = "";
 
     int mem = fread(buffer, 1, JSON_STRING_BUFSIZ, file);
@@ -86,7 +88,7 @@ int map_deserialize(struct map *map, const char *path)
 
     buffer[mem] = 0;
 
-    SDL_Log("Map loaded: %ib - %ims", mem, (int)(SDL_GetTicks64() - now));
+    SDL_Log("Map loaded from file into json string: %i bytes.", mem);
 
     // todo: json error handling
 
@@ -129,6 +131,9 @@ int map_deserialize(struct map *map, const char *path)
 
         tile_object = tile_object->next;
     }
+
+    SDL_Log("Map deserialized with %i tiles in %i ms.", total_tiles,
+            (int)(SDL_GetTicks64() - now));
 
     free(json);
 
