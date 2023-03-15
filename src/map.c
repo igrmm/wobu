@@ -5,7 +5,7 @@
 
 #include "map.h"
 
-static void map_reset_tiles(struct map *map)
+void map_reset_tiles(struct map *map)
 {
     for (int i = 0; i < TILES_MAX; i++) {
         for (int j = 0; j < TILES_MAX; j++) {
