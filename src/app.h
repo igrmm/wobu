@@ -14,13 +14,14 @@ struct fps_counter {
 };
 
 struct app {
+    SDL_Texture *pencil_texture;
     int screen_width, screen_height;
     SDL_Texture *tileset_texture;
     struct nk_vec2 tileset_selected;
     struct map *map;
     struct nk_vec2 bg_scroll_bkp, bg_scroll0, bg_scroll;
     struct fps_counter fps_counter;
-    int show_tilesetw;
+    int show_toolsw, show_tilesetw;
 };
 
 struct app *app_create(SDL_Renderer *renderer);

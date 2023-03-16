@@ -35,6 +35,14 @@ int menu_window(struct app *app, struct nk_context *ctx)
                                 nk_vec2(100, 100))) {
             nk_layout_row_dynamic(ctx, h, 1);
 
+            // tools window
+            char toolsw_title[] = "*tools";
+            if (!app->show_toolsw)
+                snprintf(toolsw_title, sizeof toolsw_title, " tools");
+
+            if (nk_menu_item_label(ctx, toolsw_title, NK_TEXT_LEFT))
+                app->show_toolsw = !app->show_toolsw;
+
             // tileset window
             char tilesetw_title[] = "*tileset";
             if (!app->show_tilesetw)

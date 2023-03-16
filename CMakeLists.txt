@@ -20,6 +20,7 @@ add_executable(${PROJECT_NAME}
     src/bgw.c
     src/statusw.c
     src/menuw.c
+    src/toolsw.c
     src/map.c
     )
 
