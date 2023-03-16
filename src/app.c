@@ -57,6 +57,7 @@ struct app *app_create(SDL_Renderer *renderer)
     app->bg_scroll = nk_vec2(bg_scroll_x, bg_scroll_y);
     app->fps_counter.frames = 0;
     app->fps_counter.timer = SDL_GetTicks64();
+    app->show_grid = 1;
     app->show_toolsw = 1;
     app->show_tilesetw = 1;
 

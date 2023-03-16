@@ -35,6 +35,14 @@ int menu_window(struct app *app, struct nk_context *ctx)
                                 nk_vec2(100, 100))) {
             nk_layout_row_dynamic(ctx, h, 1);
 
+            // grid
+            char grid_title[] = "*grid";
+            if (!app->show_grid)
+                snprintf(grid_title, sizeof grid_title, " grid");
+
+            if (nk_menu_item_label(ctx, grid_title, NK_TEXT_LEFT))
+                app->show_grid = !app->show_grid;
+
             // tools window
             char toolsw_title[] = "*tools";
             if (!app->show_toolsw)
