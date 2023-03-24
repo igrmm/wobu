@@ -3,6 +3,12 @@
 #include "app.h"
 #include "modelw.h"
 
+static SDL_FPoint scale(float x, float y, float scale)
+{
+    SDL_FPoint scaled = {x / scale, y / scale};
+    return scaled;
+}
+
 void model_window_handle_event(SDL_Event *evt, struct app *app)
 {
     if (evt->button.button == SDL_BUTTON_MIDDLE) {
