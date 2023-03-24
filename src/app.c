@@ -2,11 +2,11 @@
 #include <SDL2/SDL_image.h>
 
 #include "app.h"
-#include "bgw.h"
 #include "calc.h"
 #include "colors.h"
 #include "map.h"
 #include "menuw.h"
+#include "modelw.h"
 #include "statusw.h"
 #include "tilesetw.h"
 #include "toolsw.h"
@@ -66,7 +66,7 @@ struct app *app_create(SDL_Renderer *renderer)
 
 void app_handle_event(SDL_Event *evt, struct app *app)
 {
-    bg_handle_event(evt, app);
+    model_window_handle_event(evt, app);
 }
 
 int app_run(struct app *app, struct nk_context *ctx)
@@ -85,7 +85,7 @@ int app_run(struct app *app, struct nk_context *ctx)
 
 void app_render(SDL_Renderer *renderer, struct app *app)
 {
-    bg_render(renderer, app);
+    model_window_render(renderer, app);
 }
 
 void app_destroy(struct app *app)

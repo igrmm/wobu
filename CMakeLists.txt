@@ -17,7 +17,7 @@ add_executable(${PROJECT_NAME}
     src/app.c
     src/calc.c
     src/tilesetw.c
-    src/bgw.c
+    src/modelw.c
     src/statusw.c
     src/menuw.c
     src/toolsw.c

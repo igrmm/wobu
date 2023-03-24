@@ -1,9 +1,9 @@
 #include <SDL2/SDL.h>
 
 #include "app.h"
-#include "bgw.h"
+#include "modelw.h"
 
-void bg_handle_event(SDL_Event *evt, struct app *app)
+void model_window_handle_event(SDL_Event *evt, struct app *app)
 {
     if (evt->button.button == SDL_BUTTON_MIDDLE) {
         if (evt->type == SDL_MOUSEBUTTONDOWN) {
@@ -37,7 +37,7 @@ void bg_handle_event(SDL_Event *evt, struct app *app)
     }
 }
 
-void bg_render(SDL_Renderer *renderer, struct app *app)
+void model_window_render(SDL_Renderer *renderer, struct app *app)
 {
     SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
 
