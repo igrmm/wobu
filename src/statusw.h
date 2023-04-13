@@ -3,7 +3,7 @@
 
 #include "nk.h"
 
-#include "app.h"
+struct app;
 
 int status_window(struct app *app, struct nk_context *ctx);
 

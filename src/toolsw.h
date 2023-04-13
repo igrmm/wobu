@@ -3,7 +3,7 @@
 
 #include "nk.h"
 
-#include "app.h"
+struct app;
 
 int tools_window(struct app *app, struct nk_context *ctx, const int flags);
 
