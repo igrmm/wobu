@@ -1,7 +1,7 @@
 #ifndef MAP_H
 #define MAP_H
 
-#include <SDL2/SDL.h>
+#include "SDL.h"
 
 #define TILES_MAX 100
 #define JSON_STRING_BUFSIZ 1000000

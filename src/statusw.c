@@ -1,5 +1,6 @@
-#include <SDL2/SDL.h>
 #include <stdio.h>
+
+#include "SDL.h"
 
 #include "app.h"
 #include "calc.h"
