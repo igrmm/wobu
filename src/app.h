@@ -5,12 +5,7 @@
 #include "nk.h"
 
 #include "map.h"
-
-struct fps_counter {
-    int frames;
-    Uint32 timer;
-    char fps[9];
-};
+#include "statusw.h"
 
 struct app {
     SDL_Texture *pencil_texture;

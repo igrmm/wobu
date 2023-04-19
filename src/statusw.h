@@ -1,7 +1,14 @@
 #ifndef STATUSW_H
 #define STATUSW_H
 
+#include "SDL.h"
 #include "nk.h"
+
+struct fps_counter {
+    int frames;
+    Uint32 timer;
+    char fps[9];
+};
 
 struct app;
 
