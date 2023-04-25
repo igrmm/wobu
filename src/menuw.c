@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include "SDL.h"
 
 #include "app.h"
 #include "map.h"
@@ -38,7 +38,7 @@ int menu_window(struct app *app, struct nk_context *ctx)
             // grid
             char grid_title[] = "*grid";
             if (!app->show_grid)
-                snprintf(grid_title, sizeof grid_title, " grid");
+                SDL_snprintf(grid_title, sizeof grid_title, " grid");
 
             if (nk_menu_item_label(ctx, grid_title, NK_TEXT_LEFT))
                 app->show_grid = !app->show_grid;
@@ -46,7 +46,7 @@ int menu_window(struct app *app, struct nk_context *ctx)
             // tools window
             char toolsw_title[] = "*tools";
             if (!app->show_toolsw)
-                snprintf(toolsw_title, sizeof toolsw_title, " tools");
+                SDL_snprintf(toolsw_title, sizeof toolsw_title, " tools");
 
             if (nk_menu_item_label(ctx, toolsw_title, NK_TEXT_LEFT))
                 app->show_toolsw = !app->show_toolsw;
@@ -54,7 +54,7 @@ int menu_window(struct app *app, struct nk_context *ctx)
             // tileset window
             char tilesetw_title[] = "*tileset";
             if (!app->show_tilesetw)
-                snprintf(tilesetw_title, sizeof tilesetw_title, " tileset");
+                SDL_snprintf(tilesetw_title, sizeof tilesetw_title, " tileset");
 
             if (nk_menu_item_label(ctx, tilesetw_title, NK_TEXT_LEFT))
                 app->show_tilesetw = !app->show_tilesetw;
