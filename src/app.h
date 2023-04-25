@@ -18,10 +18,10 @@ struct app {
     int show_grid, show_toolsw, show_tilesetw;
 };
 
-struct app *app_create(SDL_Renderer *renderer);
-void app_handle_event(SDL_Event *evt, struct app *app);
+int app_init(struct app *app, SDL_Renderer *renderer);
+void app_handle_event(struct app *app, SDL_Event *evt);
 int app_run(struct app *app, struct nk_context *ctx);
-void app_render(SDL_Renderer *renderer, struct app *app);
-void app_destroy(struct app *app);
+void app_render(struct app *app, SDL_Renderer *renderer);
+void app_deinit(struct app *app);
 
 #endif

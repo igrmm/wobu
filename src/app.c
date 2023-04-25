@@ -15,32 +15,26 @@ static const int WINDOW_FLAGS = NK_WINDOW_BORDER | NK_WINDOW_SCALABLE |
                                 NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
                                 NK_WINDOW_CLOSABLE;
 
-struct app *app_create(SDL_Renderer *renderer)
+int app_init(struct app *app, SDL_Renderer *renderer)
 {
     SDL_Texture *tileset_texture = IMG_LoadTexture(renderer, "tileset.png");
     if (tileset_texture == NULL) {
         SDL_Log("SDL error in tileset_texture creation: %s", SDL_GetError());
-        return NULL;
+        return 0;
     }
 
     SDL_Texture *pencil_texture =
         IMG_LoadTexture(renderer, "../assets/pencil.png");
     if (pencil_texture == NULL) {
         SDL_Log("SDL error in tools_texture creation: %s", SDL_GetError());
-        return NULL;
-    }
-
-    struct app *app = malloc(sizeof *app);
-    if (app == NULL) {
-        SDL_Log("App error: unable to alloc memory.");
-        return NULL;
+        return 0;
     }
 
     app->map = map_create();
     if (app->map == NULL) {
         SDL_Log("Map error: unable to alloc memory.");
-        app_destroy(app);
-        return NULL;
+        app_deinit(app);
+        return 0;
     }
     SDL_Log("Map allocated memory: %i kB", (int)sizeof *app->map / 1024);
 
@@ -61,10 +55,10 @@ struct app *app_create(SDL_Renderer *renderer)
     app->show_toolsw = 1;
     app->show_tilesetw = 1;
 
-    return app;
+    return 1;
 }
 
-void app_handle_event(SDL_Event *evt, struct app *app)
+void app_handle_event(struct app *app, SDL_Event *evt)
 {
     model_window_handle_event(evt, app);
 }
@@ -83,24 +77,21 @@ int app_run(struct app *app, struct nk_context *ctx)
     return 1;
 }
 
-void app_render(SDL_Renderer *renderer, struct app *app)
+void app_render(struct app *app, SDL_Renderer *renderer)
 {
     model_window_render(renderer, app);
 }
 
-void app_destroy(struct app *app)
+void app_deinit(struct app *app)
 {
-    if (app != NULL) {
-        if (app->pencil_texture != NULL)
-            SDL_DestroyTexture(app->pencil_texture);
+    if (app->pencil_texture != NULL)
+        SDL_DestroyTexture(app->pencil_texture);
 
-        if (app->tileset_texture != NULL)
-            SDL_DestroyTexture(app->tileset_texture);
+    if (app->tileset_texture != NULL)
+        SDL_DestroyTexture(app->tileset_texture);
 
-        if (app->map != NULL)
-            free(app->map);
+    if (app->map != NULL)
+        free(app->map);
 
-        free(app);
-    }
     IMG_Quit();
 }

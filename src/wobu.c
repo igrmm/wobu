@@ -11,7 +11,7 @@
 
 int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
 {
-    struct app *app;
+    struct app app;
     SDL_Window *win;
     SDL_Renderer *renderer;
     int running = 1;
@@ -52,8 +52,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
 
     int exit_status = EXIT_SUCCESS;
 
-    app = app_create(renderer);
-    if (app == NULL) {
+    if (!app_init(&app, renderer)) {
         SDL_Log("Failed to create app.");
         exit_status = EXIT_FAILURE;
         goto cleanup;
@@ -70,13 +69,13 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
             nk_sdl_handle_event(&evt);
 
             if (!nk_item_is_any_active(ctx))
-                app_handle_event(&evt, app);
+                app_handle_event(&app, &evt);
         }
         nk_input_end(ctx);
 
         /* GUI */
-        SDL_GL_GetDrawableSize(win, &app->screen_width, &app->screen_height);
-        if (!app_run(app, ctx)) {
+        SDL_GL_GetDrawableSize(win, &app.screen_width, &app.screen_height);
+        if (!app_run(&app, ctx)) {
             SDL_Log("Failed to run app.");
             exit_status = EXIT_FAILURE;
             goto cleanup;
@@ -85,7 +84,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
         /* Render */
         SDL_SetRenderDrawColor(renderer, 26.0f, 46.0f, 61.0f, 255.0f);
         SDL_RenderClear(renderer);
-        app_render(renderer, app);
+        app_render(&app, renderer);
         nk_sdl_render(NK_ANTI_ALIASING_ON);
         SDL_RenderPresent(renderer);
     }
@@ -95,6 +94,6 @@ cleanup:
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(win);
     SDL_Quit();
-    app_destroy(app);
+    app_deinit(&app);
     return exit_status;
 }
