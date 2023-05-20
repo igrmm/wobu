@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "SDL.h"
 #include "external/json.h"
 
 #include "map.h"
@@ -54,41 +55,65 @@ static int map_jstr_cat(char *map_jstr, const char *fmt, ...)
 int map_serialize(struct map *map, const char *path)
 {
     Uint32 now = SDL_GetTicks64();
+    char map_jstr[MAP_JSTR_BUFSIZ] = ""; // ALWAYS INITIALIZE C STRINGS
 
-    FILE *file = fopen(path, "w");
+    SDL_RWops *file = SDL_RWFromFile(path, "w");
 
     if (file == NULL) {
         SDL_Log("Error opening file to write map.");
-        return 0;
+        goto serialization_error;
     }
 
-    int mem = 0;
+    // BEGINNING OF JSON STRING
+    if (!map_jstr_cat(map_jstr, "{\n    \"tiles\": [")) {
+        goto serialization_error;
+    }
 
-    mem += fprintf(file, "{\n    \"tiles\": [");
+    // WRITE TILES TO JSON STRING
+    int tile_x = 0, tile_y = 0, first_tile = 1, total_tiles = 0;
 
-    int tile_x, tile_y, first_tile = 0;
     for (int i = 0; i < map->size; i++) {
         for (int j = 0; j < map->size; j++) {
+
             tile_x = map->tiles[i][j].x;
             tile_y = map->tiles[i][j].y;
+
             if (tile_x >= 0 && tile_y >= 0) {
-                if (!first_tile) {
-                    first_tile = 1;
-                    mem +=
-                        fprintf(file, "[%i, %i, %i, %i]", i, j, tile_x, tile_y);
+                if (first_tile) {
+                    first_tile = 0;
+                    if (!map_jstr_cat(map_jstr, "[%i, %i, %i, %i]", i, j,
+                                      tile_x, tile_y)) {
+                        goto serialization_error;
+                    }
                 } else {
-                    mem += fprintf(file, ",[%i, %i, %i, %i]", i, j, tile_x,
-                                   tile_y);
+                    if (!map_jstr_cat(map_jstr, ",[%i, %i, %i, %i]", i, j,
+                                      tile_x, tile_y)) {
+                        goto serialization_error;
+                    }
                 }
+                total_tiles++;
             }
         }
     }
-    mem += fprintf(file, "]\n}");
-    fclose(file);
 
-    SDL_Log("Map saved: %ib - %ims", mem, (int)(SDL_GetTicks64() - now));
+    // ENDING OF JSON STRING
+    if (!map_jstr_cat(map_jstr, "]\n}")) {
+        goto serialization_error;
+    }
+
+    // WRITE JSON STRING TO FILE
+    size_t len = SDL_strlen(map_jstr);
+    for (size_t i = 0; i < len; i++)
+        SDL_RWwrite(file, &map_jstr[i], sizeof(char), 1);
+    SDL_RWclose(file);
+    SDL_Log("Map saved to file: %zu bytes - %i tiles - %i ms", len, total_tiles,
+            (int)(SDL_GetTicks64() - now));
 
     return 1;
+
+serialization_error:
+    SDL_Log("Map serialization error.");
+    return 0;
 }
 
 int map_deserialize(struct map *map, const char *path)
@@ -108,6 +133,7 @@ int map_deserialize(struct map *map, const char *path)
     char buffer[MAP_JSTR_BUFSIZ + 1] = "";
 
     int mem = fread(buffer, 1, MAP_JSTR_BUFSIZ, file);
+    fclose(file);
 
     if (mem > MAP_JSTR_BUFSIZ) {
         SDL_Log("Error: Json string buffer overflow.");
