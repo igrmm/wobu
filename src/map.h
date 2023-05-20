@@ -4,7 +4,7 @@
 #include "SDL.h"
 
 #define TILES_MAX 100
-#define JSON_STRING_BUFSIZ 1000000
+#define MAP_JSTR_BUFSIZ 1000000
 
 struct map {
     int size;

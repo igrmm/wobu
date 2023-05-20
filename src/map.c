@@ -82,11 +82,11 @@ int map_deserialize(struct map *map, const char *path)
 
     SDL_Log("Map deserialization started.");
 
-    char buffer[JSON_STRING_BUFSIZ + 1] = "";
+    char buffer[MAP_JSTR_BUFSIZ + 1] = "";
 
-    int mem = fread(buffer, 1, JSON_STRING_BUFSIZ, file);
+    int mem = fread(buffer, 1, MAP_JSTR_BUFSIZ, file);
 
-    if (mem > JSON_STRING_BUFSIZ) {
+    if (mem > MAP_JSTR_BUFSIZ) {
         SDL_Log("Error: Json string buffer overflow.");
         return 0;
     }
