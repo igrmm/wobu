@@ -32,6 +32,7 @@ struct map *map_create(void)
 static int map_jstr_cat(char *map_jstr, const char *fmt, ...)
 {
     char buffer[512];
+    buffer[0] = 0;
 
     va_list args;
     va_start(args, fmt);
@@ -55,7 +56,8 @@ static int map_jstr_cat(char *map_jstr, const char *fmt, ...)
 int map_serialize(struct map *map, const char *path)
 {
     Uint32 now = SDL_GetTicks64();
-    char map_jstr[MAP_JSTR_BUFSIZ] = ""; // ALWAYS INITIALIZE C STRINGS
+    char map_jstr[MAP_JSTR_BUFSIZ];
+    map_jstr[0] = 0; // ALWAYS INITIALIZE C STRINGS
 
     SDL_RWops *file = SDL_RWFromFile(path, "w");
 
