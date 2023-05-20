@@ -28,6 +28,29 @@ struct map *map_create(void)
     return map;
 }
 
+static int map_jstr_cat(char *map_jstr, const char *fmt, ...)
+{
+    char buffer[512];
+
+    va_list args;
+    va_start(args, fmt);
+    size_t len = SDL_vsnprintf(buffer, sizeof(buffer), fmt, args);
+    va_end(args);
+
+    if (len >= sizeof(buffer)) {
+        SDL_Log("map_jstr_cat error: buffer overflow");
+        return 0;
+    }
+
+    len = SDL_strlcat(map_jstr, buffer, MAP_JSTR_BUFSIZ);
+    if (len >= MAP_JSTR_BUFSIZ) {
+        SDL_Log("map_jstr_cat error: map_jstr overflow");
+        return 0;
+    }
+
+    return 1;
+}
+
 int map_serialize(struct map *map, const char *path)
 {
     Uint32 now = SDL_GetTicks64();
