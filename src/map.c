@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "SDL.h"
 #include "external/json.h"
 
@@ -120,35 +117,32 @@ serialization_error:
 
 int map_deserialize(struct map *map, const char *path)
 {
-
     Uint32 now = SDL_GetTicks64();
+    char map_jstr[MAP_JSTR_BUFSIZ];
+    map_jstr[0] = 0; // ALWAYS INITIALIZE C STRINGS
 
-    FILE *file = fopen(path, "r");
+    SDL_RWops *file = SDL_RWFromFile(path, "r");
 
     if (file == NULL) {
         SDL_Log("Error opening file to load map.");
         return 0;
     }
 
-    SDL_Log("Map deserialization started.");
-
-    char buffer[MAP_JSTR_BUFSIZ + 1] = "";
-
-    int mem = fread(buffer, 1, MAP_JSTR_BUFSIZ, file);
-    fclose(file);
-
-    if (mem > MAP_JSTR_BUFSIZ) {
-        SDL_Log("Error: Json string buffer overflow.");
-        return 0;
+    // READ JSON STRING FROM FILE
+    for (size_t i = 0; i < MAP_JSTR_BUFSIZ; i++) {
+        SDL_RWread(file, &map_jstr[i], sizeof(char), 1);
+        if (map_jstr[i] == 0)
+            break;
     }
+    SDL_RWclose(file);
 
-    buffer[mem] = 0;
+    size_t len = SDL_strlen(map_jstr);
 
-    SDL_Log("Map loaded from file into json string: %i bytes.", mem);
+    SDL_Log("Map loaded from file into json string: %zu bytes.", len);
 
+    // DESERIALIZE JSON STRING
     // todo: json error handling
-
-    struct json_value_s *json = json_parse(buffer, mem);
+    struct json_value_s *json = json_parse(map_jstr, len);
     struct json_object_s *json_root = (struct json_object_s *)json->payload;
     struct json_object_element_s *layer_object = json_root->start;
     struct json_array_s *layer_array = json_value_as_array(layer_object->value);
