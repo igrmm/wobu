@@ -3,26 +3,62 @@
 #include "app.h"
 #include "modelw.h"
 
-static SDL_FPoint scale(float x, float y, float scale)
+static void model_to_screen(SDL_FPoint model_coord, SDL_FPoint *screen_coord,
+                            SDL_FPoint offset, float scale)
 {
-    SDL_FPoint scaled = {x / scale, y / scale};
-    return scaled;
+    screen_coord->x = (model_coord.x - offset.x) * scale;
+    screen_coord->y = (model_coord.y - offset.y) * scale;
+}
+
+static void screen_to_model(SDL_FPoint screen_coord, SDL_FPoint *model_coord,
+                            SDL_FPoint offset, float scale)
+{
+    model_coord->x = screen_coord.x / scale + offset.x;
+    model_coord->y = screen_coord.y / scale + offset.y;
 }
 
 void model_window_handle_event(SDL_Event *evt, struct app *app)
 {
+    struct modelw *modelw = &app->modelw;
+
+    if (evt->type == SDL_MOUSEWHEEL) {
+        SDL_FPoint mouse = {evt->wheel.mouseX, evt->wheel.mouseY};
+
+        SDL_FPoint mouse_model_before_zoom = {0, 0};
+        screen_to_model(mouse, &mouse_model_before_zoom, modelw->offset,
+                        modelw->scale);
+
+        if (evt->wheel.y > 0) {
+            modelw->scale *= 1.1f;
+
+        } else if (evt->wheel.y < 0) {
+            modelw->scale *= 0.9f;
+        }
+
+        SDL_FPoint mouse_model_after_zoom = {0, 0};
+        screen_to_model(mouse, &mouse_model_after_zoom, modelw->offset,
+                        modelw->scale);
+
+        modelw->offset.x +=
+            (mouse_model_before_zoom.x - mouse_model_after_zoom.x);
+        modelw->offset.y +=
+            (mouse_model_before_zoom.y - mouse_model_after_zoom.y);
+    }
+
     if (evt->button.button == SDL_BUTTON_MIDDLE) {
+        SDL_FPoint mouse = {evt->button.x, evt->button.y};
+
         if (evt->type == SDL_MOUSEBUTTONDOWN) {
-            app->bg_scroll_bkp = app->bg_scroll;
-            app->bg_scroll0.x = evt->button.x;
-            app->bg_scroll0.y = evt->button.y;
+            modelw->pan_start.x = mouse.x;
+            modelw->pan_start.y = mouse.y;
 
         } else if (evt->type == SDL_MOUSEMOTION) {
-            app->bg_scroll.x =
-                app->bg_scroll_bkp.x + evt->button.x - app->bg_scroll0.x;
-
-            app->bg_scroll.y =
-                app->bg_scroll_bkp.y + evt->button.y - app->bg_scroll0.y;
+            modelw->offset.x -=
+                (evt->button.x - modelw->pan_start.x) / app->modelw.scale;
+            modelw->offset.y -=
+                (evt->button.y - modelw->pan_start.y) / app->modelw.scale;
+            modelw->pan_start.x = mouse.x;
+            modelw->pan_start.y = mouse.y;
         }
     }
 
@@ -49,18 +85,28 @@ void model_window_render(SDL_Renderer *renderer, struct app *app)
 
     int tile_size = app->map->tile_size;
     int map_size = app->map->size;
-    SDL_Rect srcrect = {0, 0, tile_size, tile_size};
-    SDL_Rect dstrect = {0, 0, tile_size, tile_size};
+    SDL_Rect src_rect = {-1, -1, tile_size, tile_size};
+    SDL_FRect dst_rect = {0, 0, tile_size, tile_size};
+    SDL_FPoint model_coord = {0, 0};
+    SDL_FPoint screen_coord = {0, 0};
 
     for (int i = 0; i < TILES_MAX; i++) {
         for (int j = 0; j < TILES_MAX; j++) {
-            srcrect.x = app->map->tiles[i][j].x;
-            srcrect.y = app->map->tiles[i][j].y;
-            if (srcrect.x >= 0 && srcrect.y >= 0) {
-                dstrect.x = i * tile_size + app->bg_scroll.x;
-                dstrect.y = j * tile_size + app->bg_scroll.y;
-                SDL_RenderCopy(renderer, app->tileset_texture, &srcrect,
-                               &dstrect);
+            src_rect.x = app->map->tiles[i][j].x;
+            src_rect.y = app->map->tiles[i][j].y;
+            if (src_rect.x >= 0 && src_rect.y >= 0) {
+
+                // make coordinate convertion
+                model_coord.x = i * tile_size;
+                model_coord.y = j * tile_size;
+                model_to_screen(model_coord, &screen_coord, app->modelw.offset,
+                                app->modelw.scale);
+                dst_rect.x = screen_coord.x;
+                dst_rect.y = screen_coord.y;
+                dst_rect.w = dst_rect.h = tile_size * app->modelw.scale;
+
+                SDL_RenderCopyF(renderer, app->tileset_texture, &src_rect,
+                                &dst_rect);
             }
         }
     }

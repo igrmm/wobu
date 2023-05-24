@@ -49,6 +49,9 @@ int app_init(struct app *app, SDL_Renderer *renderer)
     app->tileset_texture = tileset_texture;
     app->tileset_selected = nk_vec2(-1, -1);
     app->bg_scroll = nk_vec2(bg_scroll_x, bg_scroll_y);
+    app->modelw.offset.x = app->modelw.offset.y = 0;
+    app->modelw.pan_start.x = app->modelw.pan_start.y = 0;
+    app->modelw.scale = 1;
     app->fps_counter.frames = 0;
     app->fps_counter.timer = SDL_GetTicks64();
     app->show_grid = 1;

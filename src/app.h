@@ -5,6 +5,7 @@
 #include "nk.h"
 
 #include "map.h"
+#include "modelw.h"
 #include "statusw.h"
 
 struct app {
@@ -14,6 +15,7 @@ struct app {
     struct nk_vec2 tileset_selected;
     struct map *map;
     struct nk_vec2 bg_scroll_bkp, bg_scroll0, bg_scroll;
+    struct modelw modelw;
     struct fps_counter fps_counter;
     int show_grid, show_toolsw, show_tilesetw;
 };
