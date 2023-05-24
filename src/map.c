@@ -102,7 +102,7 @@ int map_serialize(struct map *map, const char *path)
 
     // WRITE JSON STRING TO FILE
     size_t len = SDL_strlen(map_jstr);
-    for (size_t i = 0; i < len; i++)
+    for (size_t i = 0; i <= len; i++)
         SDL_RWwrite(file, &map_jstr[i], sizeof(char), 1);
     SDL_RWclose(file);
     SDL_Log("Map saved to file: %zu bytes - %i tiles - %i ms", len, total_tiles,
