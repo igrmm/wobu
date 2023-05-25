@@ -79,8 +79,11 @@ void model_window_handle_event(SDL_Event *evt, struct app *app)
     }
 }
 
+// TODO OPTMIZATION, CLIPPING
 void model_window_render(SDL_Renderer *renderer, struct app *app)
 {
+    struct modelw *modelw = &app->modelw;
+
     SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
 
     int tile_size = app->map->tile_size;
@@ -112,18 +115,38 @@ void model_window_render(SDL_Renderer *renderer, struct app *app)
     }
 
     if (app->show_grid) {
-        int cols = map_size + 1;
-        for (int col = 0; col < cols; col++)
-            SDL_RenderDrawLine(renderer, col * tile_size + app->bg_scroll.x,
-                               app->bg_scroll.y,
-                               col * tile_size + app->bg_scroll.x,
-                               map_size * tile_size + app->bg_scroll.y);
+        int cols = map_size;
+        SDL_FPoint col0_model, col0_screen, col1_model, col1_screen;
+        for (int col = 0; col <= cols; col++) {
+            col0_model.x = col * tile_size;
+            col0_model.y = 0;
+            col1_model.x = col * tile_size;
+            col1_model.y = map_size * tile_size;
 
-        int rows = map_size + 1;
-        for (int row = 0; row < rows; row++)
-            SDL_RenderDrawLine(renderer, app->bg_scroll.x,
-                               row * tile_size + app->bg_scroll.y,
-                               map_size * tile_size + app->bg_scroll.x,
-                               row * tile_size + app->bg_scroll.y);
+            model_to_screen(col0_model, &col0_screen, modelw->offset,
+                            modelw->scale);
+            model_to_screen(col1_model, &col1_screen, modelw->offset,
+                            modelw->scale);
+
+            SDL_RenderDrawLineF(renderer, col0_screen.x, col0_screen.y,
+                                col1_screen.x, col1_screen.y);
+        }
+
+        int rows = map_size;
+        SDL_FPoint row0_model, row0_screen, row1_model, row1_screen;
+        for (int row = 0; row <= rows; row++) {
+            row0_model.x = 0;
+            row0_model.y = row * tile_size;
+            row1_model.x = map_size * tile_size;
+            row1_model.y = row * tile_size;
+
+            model_to_screen(row0_model, &row0_screen, modelw->offset,
+                            modelw->scale);
+            model_to_screen(row1_model, &row1_screen, modelw->offset,
+                            modelw->scale);
+
+            SDL_RenderDrawLineF(renderer, row0_screen.x, row0_screen.y,
+                                row1_screen.x, row1_screen.y);
+        }
     }
 }
