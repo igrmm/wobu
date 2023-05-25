@@ -64,14 +64,18 @@ void model_window_handle_event(SDL_Event *evt, struct app *app)
 
     if (evt->button.button == SDL_BUTTON_LEFT &&
         (evt->type == SDL_MOUSEBUTTONDOWN || evt->type == SDL_MOUSEMOTION)) {
-        int map_size_px = app->map->size * app->map->tile_size;
-        SDL_Rect grid_rect = {app->bg_scroll.x, app->bg_scroll.y, map_size_px,
-                              map_size_px};
-        SDL_Point mouse_pos = {evt->button.x, evt->button.y};
 
-        if (SDL_PointInRect(&mouse_pos, &grid_rect)) {
-            int tile_x = (mouse_pos.x - grid_rect.x) / app->map->tile_size;
-            int tile_y = (mouse_pos.y - grid_rect.y) / app->map->tile_size;
+        SDL_FPoint mouse_screen_coord = {evt->button.x, evt->button.y};
+        SDL_FPoint mouse;
+        screen_to_model(mouse_screen_coord, &mouse, modelw->offset,
+                        modelw->scale);
+
+        int map_size_px = app->map->size * app->map->tile_size;
+        SDL_FRect grid_rect = {0, 0, map_size_px, map_size_px};
+
+        if (SDL_PointInFRect(&mouse, &grid_rect)) {
+            int tile_x = mouse.x / app->map->tile_size;
+            int tile_y = mouse.y / app->map->tile_size;
 
             app->map->tiles[tile_x][tile_y].x = app->tileset_selected.x;
             app->map->tiles[tile_x][tile_y].y = app->tileset_selected.y;

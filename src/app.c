@@ -42,14 +42,14 @@ int app_init(struct app *app, SDL_Renderer *renderer)
     SDL_GetRendererOutputSize(renderer, &app->screen_width,
                               &app->screen_height);
     int map_size = app->map->size * app->map->tile_size;
-    int bg_scroll_x = (app->screen_width - map_size) / 2;
-    int bg_scroll_y = (app->screen_height - map_size) / 2;
+    int offset_x = -(app->screen_width - map_size) / 2;
+    int offset_y = -(app->screen_height - map_size) / 2;
 
     app->pencil_texture = pencil_texture;
     app->tileset_texture = tileset_texture;
     app->tileset_selected = nk_vec2(-1, -1);
-    app->bg_scroll = nk_vec2(bg_scroll_x, bg_scroll_y);
-    app->modelw.offset.x = app->modelw.offset.y = 0;
+    app->modelw.offset.x = offset_x;
+    app->modelw.offset.y = offset_y;
     app->modelw.pan_start.x = app->modelw.pan_start.y = 0;
     app->modelw.scale = 1;
     app->fps_counter.frames = 0;
