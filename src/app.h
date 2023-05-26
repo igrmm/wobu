@@ -9,13 +9,13 @@
 #include "statusw.h"
 
 struct app {
-    SDL_Texture *pencil_texture;
     int screen_width, screen_height;
     SDL_Texture *tileset_texture;
     struct nk_vec2 tileset_selected;
     struct map *map;
     struct modelw modelw;
     struct fps_counter fps_counter;
+    struct tool tools[NUMBER_OF_TOOLS];
     int show_grid, show_toolsw, show_tilesetw;
 };
 
