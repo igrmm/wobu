@@ -17,69 +17,94 @@ static void screen_to_model(SDL_FPoint screen_coord, SDL_FPoint *model_coord,
     model_coord->y = screen_coord.y / scale + offset.y;
 }
 
-void model_window_handle_event(SDL_Event *evt, struct app *app)
+static void pencil_update(SDL_FPoint mouse_screen_coord, struct app *app)
 {
+    SDL_FPoint mouse;
+    screen_to_model(mouse_screen_coord, &mouse, app->modelw.offset,
+                    app->modelw.scale);
+
+    int map_size_px = app->map->size * app->map->tile_size;
+    SDL_FRect grid_rect = {0, 0, map_size_px, map_size_px};
+
+    if (SDL_PointInFRect(&mouse, &grid_rect)) {
+        int tile_x = mouse.x / app->map->tile_size;
+        int tile_y = mouse.y / app->map->tile_size;
+
+        app->map->tiles[tile_x][tile_y].x = app->tileset_selected.x;
+        app->map->tiles[tile_x][tile_y].y = app->tileset_selected.y;
+    }
+}
+
+static void evt_mouse_wheel(SDL_MouseWheelEvent *evt, struct app *app)
+{
+    SDL_FPoint mouse = {evt->mouseX, evt->mouseY};
     struct modelw *modelw = &app->modelw;
 
-    if (evt->type == SDL_MOUSEWHEEL) {
-        SDL_FPoint mouse = {evt->wheel.mouseX, evt->wheel.mouseY};
+    SDL_FPoint mouse_model_before_zoom = {0, 0};
+    screen_to_model(mouse, &mouse_model_before_zoom, modelw->offset,
+                    modelw->scale);
 
-        SDL_FPoint mouse_model_before_zoom = {0, 0};
-        screen_to_model(mouse, &mouse_model_before_zoom, modelw->offset,
-                        modelw->scale);
+    if (evt->y > 0) {
+        modelw->scale *= 1.1f;
 
-        if (evt->wheel.y > 0) {
-            modelw->scale *= 1.1f;
-
-        } else if (evt->wheel.y < 0) {
-            modelw->scale *= 0.9f;
-        }
-
-        SDL_FPoint mouse_model_after_zoom = {0, 0};
-        screen_to_model(mouse, &mouse_model_after_zoom, modelw->offset,
-                        modelw->scale);
-
-        modelw->offset.x +=
-            (mouse_model_before_zoom.x - mouse_model_after_zoom.x);
-        modelw->offset.y +=
-            (mouse_model_before_zoom.y - mouse_model_after_zoom.y);
+    } else if (evt->y < 0) {
+        modelw->scale *= 0.9f;
     }
 
-    if (evt->button.button == SDL_BUTTON_MIDDLE) {
-        SDL_FPoint mouse = {evt->button.x, evt->button.y};
+    SDL_FPoint mouse_model_after_zoom = {0, 0};
+    screen_to_model(mouse, &mouse_model_after_zoom, modelw->offset,
+                    modelw->scale);
 
-        if (evt->type == SDL_MOUSEBUTTONDOWN) {
-            modelw->pan_start.x = mouse.x;
-            modelw->pan_start.y = mouse.y;
+    modelw->offset.x += (mouse_model_before_zoom.x - mouse_model_after_zoom.x);
+    modelw->offset.y += (mouse_model_before_zoom.y - mouse_model_after_zoom.y);
+}
 
-        } else if (evt->type == SDL_MOUSEMOTION) {
-            modelw->offset.x -=
-                (evt->button.x - modelw->pan_start.x) / app->modelw.scale;
-            modelw->offset.y -=
-                (evt->button.y - modelw->pan_start.y) / app->modelw.scale;
-            modelw->pan_start.x = mouse.x;
-            modelw->pan_start.y = mouse.y;
-        }
+static void evt_mouse_down(SDL_MouseButtonEvent *evt, struct app *app)
+{
+    SDL_FPoint mouse = {evt->x, evt->y};
+    struct modelw *modelw = &app->modelw;
+
+    if (evt->button == SDL_BUTTON_LEFT) {
+        pencil_update(mouse, app);
+
+    } else if (evt->button == SDL_BUTTON_MIDDLE) {
+        modelw->pan_start.x = mouse.x;
+        modelw->pan_start.y = mouse.y;
     }
+}
 
-    if (evt->button.button == SDL_BUTTON_LEFT &&
-        (evt->type == SDL_MOUSEBUTTONDOWN || evt->type == SDL_MOUSEMOTION)) {
+static void evt_mouse_motion(SDL_MouseMotionEvent *evt, struct app *app)
+{
+    SDL_FPoint mouse = {evt->x, evt->y};
+    Uint32 button = evt->state;
+    struct modelw *modelw = &app->modelw;
 
-        SDL_FPoint mouse_screen_coord = {evt->button.x, evt->button.y};
-        SDL_FPoint mouse;
-        screen_to_model(mouse_screen_coord, &mouse, modelw->offset,
-                        modelw->scale);
+    if (button == SDL_BUTTON_LMASK) {
+        pencil_update(mouse, app);
 
-        int map_size_px = app->map->size * app->map->tile_size;
-        SDL_FRect grid_rect = {0, 0, map_size_px, map_size_px};
+    } else if (button == SDL_BUTTON_MMASK) {
+        modelw->offset.x -= (mouse.x - modelw->pan_start.x) / modelw->scale;
+        modelw->offset.y -= (mouse.y - modelw->pan_start.y) / modelw->scale;
+        modelw->pan_start.x = mouse.x;
+        modelw->pan_start.y = mouse.y;
+    }
+}
 
-        if (SDL_PointInFRect(&mouse, &grid_rect)) {
-            int tile_x = mouse.x / app->map->tile_size;
-            int tile_y = mouse.y / app->map->tile_size;
+void model_window_handle_event(SDL_Event *evt, struct app *app)
+{
+    switch (evt->type) {
 
-            app->map->tiles[tile_x][tile_y].x = app->tileset_selected.x;
-            app->map->tiles[tile_x][tile_y].y = app->tileset_selected.y;
-        }
+    case SDL_MOUSEWHEEL:
+        evt_mouse_wheel(&evt->wheel, app);
+        break;
+
+    case SDL_MOUSEBUTTONDOWN:
+        evt_mouse_down(&evt->button, app);
+        break;
+
+    case SDL_MOUSEMOTION:
+        evt_mouse_motion(&evt->motion, app);
+        break;
     }
 }
 
