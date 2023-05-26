@@ -15,7 +15,6 @@ struct app {
     struct map *map;
     struct modelw modelw;
     struct fps_counter fps_counter;
-    struct tool tools[NUMBER_OF_TOOLS];
     int show_grid, show_toolsw, show_tilesetw;
 };
 

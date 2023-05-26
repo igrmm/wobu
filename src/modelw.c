@@ -17,7 +17,42 @@ static void screen_to_model(SDL_FPoint screen_coord, SDL_FPoint *model_coord,
     model_coord->y = screen_coord.y / scale + offset.y;
 }
 
-static void pencil_update(SDL_FPoint mouse_screen_coord, struct app *app)
+static void make_tool_rect(struct tool_rect *tool_rect,
+                           SDL_FPoint mouse_screen_coord)
+{
+    // HORIZONTAL X AXIS
+    if (tool_rect->start.x <= 0) {
+        tool_rect->start.x = tool_rect->rect.x = mouse_screen_coord.x;
+
+    } else if (mouse_screen_coord.x > tool_rect->start.x) {
+        tool_rect->rect.w = mouse_screen_coord.x - tool_rect->start.x;
+
+    } else {
+        tool_rect->rect.w = tool_rect->start.x - mouse_screen_coord.x;
+        tool_rect->rect.x = mouse_screen_coord.x;
+    }
+
+    // VERTICAL Y AXIS
+    if (tool_rect->start.y <= 0) {
+        tool_rect->start.y = tool_rect->rect.y = mouse_screen_coord.y;
+
+    } else if (mouse_screen_coord.y > tool_rect->start.y) {
+        tool_rect->rect.h = mouse_screen_coord.y - tool_rect->start.y;
+
+    } else {
+        tool_rect->rect.h = tool_rect->start.y - mouse_screen_coord.y;
+        tool_rect->rect.y = mouse_screen_coord.y;
+    }
+}
+
+void reset_tool_rect(struct tool_rect *tool_rect)
+{
+    tool_rect->rect.x = tool_rect->rect.y = -1;
+    tool_rect->rect.w = tool_rect->rect.h = 0;
+    tool_rect->start.x = tool_rect->start.y = -1;
+}
+
+static void pencil_tool(SDL_FPoint mouse_screen_coord, struct app *app)
 {
     SDL_FPoint mouse;
     screen_to_model(mouse_screen_coord, &mouse, app->modelw.offset,
@@ -32,6 +67,17 @@ static void pencil_update(SDL_FPoint mouse_screen_coord, struct app *app)
 
         app->map->tiles[tile_x][tile_y].x = app->tileset_selected.x;
         app->map->tiles[tile_x][tile_y].y = app->tileset_selected.y;
+    }
+}
+
+static void pencil_tool_alt(SDL_FPoint mouse_screen_coord, Uint8 state,
+                            struct app *app)
+{
+    if (state == SDL_PRESSED) {
+        make_tool_rect(&app->modelw.tool_rect, mouse_screen_coord);
+
+    } else if (state == SDL_RELEASED) {
+        reset_tool_rect(&app->modelw.tool_rect);
     }
 }
 
@@ -63,13 +109,27 @@ static void evt_mouse_down(SDL_MouseButtonEvent *evt, struct app *app)
 {
     SDL_FPoint mouse = {evt->x, evt->y};
     struct modelw *modelw = &app->modelw;
+    Uint8 state = evt->state;
 
     if (evt->button == SDL_BUTTON_LEFT) {
-        pencil_update(mouse, app);
+        pencil_tool(mouse, app);
 
     } else if (evt->button == SDL_BUTTON_MIDDLE) {
         modelw->pan_start.x = mouse.x;
         modelw->pan_start.y = mouse.y;
+
+    } else if (evt->button == SDL_BUTTON_RIGHT) {
+        pencil_tool_alt(mouse, state, app);
+    }
+}
+
+static void evt_mouse_up(SDL_MouseButtonEvent *evt, struct app *app)
+{
+    SDL_FPoint mouse = {evt->x, evt->y};
+    Uint8 state = evt->state;
+
+    if (evt->button == SDL_BUTTON_RIGHT) {
+        pencil_tool_alt(mouse, state, app);
     }
 }
 
@@ -80,13 +140,16 @@ static void evt_mouse_motion(SDL_MouseMotionEvent *evt, struct app *app)
     struct modelw *modelw = &app->modelw;
 
     if (button == SDL_BUTTON_LMASK) {
-        pencil_update(mouse, app);
+        pencil_tool(mouse, app);
 
     } else if (button == SDL_BUTTON_MMASK) {
         modelw->offset.x -= (mouse.x - modelw->pan_start.x) / modelw->scale;
         modelw->offset.y -= (mouse.y - modelw->pan_start.y) / modelw->scale;
         modelw->pan_start.x = mouse.x;
         modelw->pan_start.y = mouse.y;
+
+    } else if (button == SDL_BUTTON_RMASK) {
+        pencil_tool_alt(mouse, SDL_PRESSED, app);
     }
 }
 
@@ -100,6 +163,10 @@ void model_window_handle_event(SDL_Event *evt, struct app *app)
 
     case SDL_MOUSEBUTTONDOWN:
         evt_mouse_down(&evt->button, app);
+        break;
+
+    case SDL_MOUSEBUTTONUP:
+        evt_mouse_up(&evt->button, app);
         break;
 
     case SDL_MOUSEMOTION:
@@ -177,5 +244,11 @@ void model_window_render(SDL_Renderer *renderer, struct app *app)
             SDL_RenderDrawLineF(renderer, row0_screen.x, row0_screen.y,
                                 row1_screen.x, row1_screen.y);
         }
+    }
+
+    if (app->modelw.tool_rect.rect.w > 0 || app->modelw.tool_rect.rect.h > 0) {
+        SDL_Color c = app->modelw.current_tool->rect_color;
+        SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
+        SDL_RenderDrawRectF(renderer, &app->modelw.tool_rect.rect);
     }
 }

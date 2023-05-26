@@ -18,11 +18,9 @@ static const int WINDOW_FLAGS = NK_WINDOW_BORDER | NK_WINDOW_SCALABLE |
 static struct tool tool_init(enum tool_type tool_type, SDL_Texture *texture,
                              int r, int g, int b)
 {
-    SDL_FRect rect = {0, 0, 0, 0};
     SDL_Color rect_color = {r, g, b, 255};
     struct tool tool;
     tool.type = tool_type;
-    tool.rect = rect;
     tool.rect_color = rect_color;
     tool.texture = texture;
     return tool;
@@ -42,7 +40,9 @@ int app_init(struct app *app, SDL_Renderer *renderer)
         SDL_Log("SDL error in pencil_texture creation: %s", SDL_GetError());
         return 0;
     }
-    app->tools[PENCIL] = tool_init(PENCIL, pencil_texture, 0, 255, 0);
+    app->modelw.tools[PENCIL] = tool_init(PENCIL, pencil_texture, 0, 255, 0);
+
+    reset_tool_rect(&app->modelw.tool_rect);
 
     app->map = map_create();
     if (app->map == NULL) {
@@ -59,6 +59,7 @@ int app_init(struct app *app, SDL_Renderer *renderer)
     int offset_x = -(app->screen_width - map_size) / 2;
     int offset_y = -(app->screen_height - map_size) / 2;
 
+    app->modelw.current_tool = &app->modelw.tools[PENCIL];
     app->tileset_texture = tileset_texture;
     app->tileset_selected = nk_vec2(-1, -1);
     app->modelw.offset.x = offset_x;
@@ -101,7 +102,7 @@ void app_render(struct app *app, SDL_Renderer *renderer)
 void app_deinit(struct app *app)
 {
     for (int tool = 0; tool < NUMBER_OF_TOOLS; tool++)
-        SDL_DestroyTexture(app->tools[tool].texture);
+        SDL_DestroyTexture(app->modelw.tools[tool].texture);
 
     if (app->tileset_texture != NULL)
         SDL_DestroyTexture(app->tileset_texture);

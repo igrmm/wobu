@@ -8,7 +8,7 @@ int tools_window(struct app *app, struct nk_context *ctx, const int flags)
 
     if (nk_begin(ctx, "tools", nk_rect(20, 260, 200, 85), flags)) {
         nk_layout_row_static(ctx, btn_size, btn_size, 1);
-        nk_button_image(ctx, nk_image_ptr(app->tools[PENCIL].texture));
+        nk_button_image(ctx, nk_image_ptr(app->modelw.tools[PENCIL].texture));
     } else {
         app->show_toolsw = 0;
     }
