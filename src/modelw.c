@@ -17,6 +17,16 @@ static void screen_to_model(SDL_FPoint screen_coord, SDL_FPoint *model_coord,
     model_coord->y = screen_coord.y / scale + offset.y;
 }
 
+static void reset_pan_and_zoom(struct app *app)
+{
+    int map_size = app->map->size * app->map->tile_size;
+    int offset_x = -(app->screen_width - map_size) / 2;
+    int offset_y = -(app->screen_height - map_size) / 2;
+    app->modelw.offset.x = offset_x;
+    app->modelw.offset.y = offset_y;
+    app->modelw.scale = 1;
+}
+
 static void make_tool_rect(struct tool_rect *tool_rect,
                            SDL_FPoint mouse_screen_coord)
 {
@@ -117,8 +127,13 @@ static void evt_mouse_down(SDL_MouseButtonEvent *evt, struct app *app)
         pencil_tool(mouse, app);
 
     } else if (evt->button == SDL_BUTTON_MIDDLE) {
-        modelw->pan_start.x = mouse.x;
-        modelw->pan_start.y = mouse.y;
+        if (evt->clicks == 2) {
+            reset_pan_and_zoom(app);
+
+        } else {
+            modelw->pan_start.x = mouse.x;
+            modelw->pan_start.y = mouse.y;
+        }
 
     } else if (evt->button == SDL_BUTTON_RIGHT) {
         pencil_tool_alt(mouse, state, app);
