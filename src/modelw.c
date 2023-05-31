@@ -25,6 +25,7 @@ static void make_tool_rect(struct tool_rect *tool_rect,
         tool_rect->start.x = tool_rect->rect.x = mouse_screen_coord.x;
 
     } else if (mouse_screen_coord.x > tool_rect->start.x) {
+        tool_rect->rect.x = tool_rect->start.x;
         tool_rect->rect.w = mouse_screen_coord.x - tool_rect->start.x;
 
     } else {
@@ -37,6 +38,7 @@ static void make_tool_rect(struct tool_rect *tool_rect,
         tool_rect->start.y = tool_rect->rect.y = mouse_screen_coord.y;
 
     } else if (mouse_screen_coord.y > tool_rect->start.y) {
+        tool_rect->rect.y = tool_rect->start.y;
         tool_rect->rect.h = mouse_screen_coord.y - tool_rect->start.y;
 
     } else {
