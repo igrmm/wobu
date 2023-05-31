@@ -55,17 +55,11 @@ int app_init(struct app *app, SDL_Renderer *renderer)
     // centralize bg
     SDL_GetRendererOutputSize(renderer, &app->screen_width,
                               &app->screen_height);
-    int map_size = app->map->size * app->map->tile_size;
-    int offset_x = -(app->screen_width - map_size) / 2;
-    int offset_y = -(app->screen_height - map_size) / 2;
+    reset_pan_and_zoom(app);
 
     app->modelw.current_tool = &app->modelw.tools[PENCIL];
     app->tileset_texture = tileset_texture;
     app->tileset_selected = nk_vec2(-1, -1);
-    app->modelw.offset.x = offset_x;
-    app->modelw.offset.y = offset_y;
-    app->modelw.pan_start.x = app->modelw.pan_start.y = 0;
-    app->modelw.scale = 1;
     app->fps_counter.frames = 0;
     app->fps_counter.timer = SDL_GetTicks64();
     app->show_grid = 1;

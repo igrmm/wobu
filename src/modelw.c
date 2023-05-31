@@ -3,28 +3,28 @@
 #include "app.h"
 #include "modelw.h"
 
-static void model_to_screen(SDL_FPoint model_coord, SDL_FPoint *screen_coord,
-                            SDL_FPoint offset, float scale)
+static SDL_FPoint offset;
+static SDL_FPoint pan_start;
+static float scale;
+
+static void model_to_screen(SDL_FPoint model_coord, SDL_FPoint *screen_coord)
 {
     screen_coord->x = (model_coord.x - offset.x) * scale;
     screen_coord->y = (model_coord.y - offset.y) * scale;
 }
 
-static void screen_to_model(SDL_FPoint screen_coord, SDL_FPoint *model_coord,
-                            SDL_FPoint offset, float scale)
+static void screen_to_model(SDL_FPoint screen_coord, SDL_FPoint *model_coord)
 {
     model_coord->x = screen_coord.x / scale + offset.x;
     model_coord->y = screen_coord.y / scale + offset.y;
 }
 
-static void reset_pan_and_zoom(struct app *app)
+void reset_pan_and_zoom(struct app *app)
 {
     int map_size = app->map->size * app->map->tile_size;
-    int offset_x = -(app->screen_width - map_size) / 2;
-    int offset_y = -(app->screen_height - map_size) / 2;
-    app->modelw.offset.x = offset_x;
-    app->modelw.offset.y = offset_y;
-    app->modelw.scale = 1;
+    offset.x = -(app->screen_width - map_size) * 0.5f;
+    offset.y = -(app->screen_height - map_size) * 0.5f;
+    scale = 1;
 }
 
 static void make_tool_rect(struct tool_rect *tool_rect,
@@ -67,8 +67,7 @@ void reset_tool_rect(struct tool_rect *tool_rect)
 static void pencil_tool(SDL_FPoint mouse_screen_coord, struct app *app)
 {
     SDL_FPoint mouse;
-    screen_to_model(mouse_screen_coord, &mouse, app->modelw.offset,
-                    app->modelw.scale);
+    screen_to_model(mouse_screen_coord, &mouse);
 
     int map_size_px = app->map->size * app->map->tile_size;
     SDL_FRect grid_rect = {0, 0, map_size_px, map_size_px};
@@ -96,31 +95,27 @@ static void pencil_tool_alt(SDL_FPoint mouse_screen_coord, Uint8 state,
 static void evt_mouse_wheel(SDL_MouseWheelEvent *evt, struct app *app)
 {
     SDL_FPoint mouse = {evt->mouseX, evt->mouseY};
-    struct modelw *modelw = &app->modelw;
 
     SDL_FPoint mouse_model_before_zoom = {0, 0};
-    screen_to_model(mouse, &mouse_model_before_zoom, modelw->offset,
-                    modelw->scale);
+    screen_to_model(mouse, &mouse_model_before_zoom);
 
     if (evt->y > 0) {
-        modelw->scale *= 1.1f;
+        scale *= 1.1f;
 
     } else if (evt->y < 0) {
-        modelw->scale *= 0.9f;
+        scale *= 0.9f;
     }
 
     SDL_FPoint mouse_model_after_zoom = {0, 0};
-    screen_to_model(mouse, &mouse_model_after_zoom, modelw->offset,
-                    modelw->scale);
+    screen_to_model(mouse, &mouse_model_after_zoom);
 
-    modelw->offset.x += (mouse_model_before_zoom.x - mouse_model_after_zoom.x);
-    modelw->offset.y += (mouse_model_before_zoom.y - mouse_model_after_zoom.y);
+    offset.x += (mouse_model_before_zoom.x - mouse_model_after_zoom.x);
+    offset.y += (mouse_model_before_zoom.y - mouse_model_after_zoom.y);
 }
 
 static void evt_mouse_down(SDL_MouseButtonEvent *evt, struct app *app)
 {
     SDL_FPoint mouse = {evt->x, evt->y};
-    struct modelw *modelw = &app->modelw;
     Uint8 state = evt->state;
 
     if (evt->button == SDL_BUTTON_LEFT) {
@@ -131,8 +126,8 @@ static void evt_mouse_down(SDL_MouseButtonEvent *evt, struct app *app)
             reset_pan_and_zoom(app);
 
         } else {
-            modelw->pan_start.x = mouse.x;
-            modelw->pan_start.y = mouse.y;
+            pan_start.x = mouse.x;
+            pan_start.y = mouse.y;
         }
 
     } else if (evt->button == SDL_BUTTON_RIGHT) {
@@ -154,16 +149,15 @@ static void evt_mouse_motion(SDL_MouseMotionEvent *evt, struct app *app)
 {
     SDL_FPoint mouse = {evt->x, evt->y};
     Uint32 button = evt->state;
-    struct modelw *modelw = &app->modelw;
 
     if (button == SDL_BUTTON_LMASK) {
         pencil_tool(mouse, app);
 
     } else if (button == SDL_BUTTON_MMASK) {
-        modelw->offset.x -= (mouse.x - modelw->pan_start.x) / modelw->scale;
-        modelw->offset.y -= (mouse.y - modelw->pan_start.y) / modelw->scale;
-        modelw->pan_start.x = mouse.x;
-        modelw->pan_start.y = mouse.y;
+        offset.x -= (mouse.x - pan_start.x) / scale;
+        offset.y -= (mouse.y - pan_start.y) / scale;
+        pan_start.x = mouse.x;
+        pan_start.y = mouse.y;
 
     } else if (button == SDL_BUTTON_RMASK) {
         pencil_tool_alt(mouse, SDL_PRESSED, app);
@@ -195,8 +189,6 @@ void model_window_handle_event(SDL_Event *evt, struct app *app)
 // TODO OPTMIZATION, CLIPPING
 void model_window_render(SDL_Renderer *renderer, struct app *app)
 {
-    struct modelw *modelw = &app->modelw;
-
     SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
 
     int tile_size = app->map->tile_size;
@@ -215,11 +207,10 @@ void model_window_render(SDL_Renderer *renderer, struct app *app)
                 // make coordinate convertion
                 model_coord.x = i * tile_size;
                 model_coord.y = j * tile_size;
-                model_to_screen(model_coord, &screen_coord, app->modelw.offset,
-                                app->modelw.scale);
+                model_to_screen(model_coord, &screen_coord);
                 dst_rect.x = screen_coord.x;
                 dst_rect.y = screen_coord.y;
-                dst_rect.w = dst_rect.h = tile_size * app->modelw.scale;
+                dst_rect.w = dst_rect.h = tile_size * scale;
 
                 SDL_RenderCopyF(renderer, app->tileset_texture, &src_rect,
                                 &dst_rect);
@@ -236,10 +227,8 @@ void model_window_render(SDL_Renderer *renderer, struct app *app)
             col1_model.x = col * tile_size;
             col1_model.y = map_size * tile_size;
 
-            model_to_screen(col0_model, &col0_screen, modelw->offset,
-                            modelw->scale);
-            model_to_screen(col1_model, &col1_screen, modelw->offset,
-                            modelw->scale);
+            model_to_screen(col0_model, &col0_screen);
+            model_to_screen(col1_model, &col1_screen);
 
             SDL_RenderDrawLineF(renderer, col0_screen.x, col0_screen.y,
                                 col1_screen.x, col1_screen.y);
@@ -253,10 +242,8 @@ void model_window_render(SDL_Renderer *renderer, struct app *app)
             row1_model.x = map_size * tile_size;
             row1_model.y = row * tile_size;
 
-            model_to_screen(row0_model, &row0_screen, modelw->offset,
-                            modelw->scale);
-            model_to_screen(row1_model, &row1_screen, modelw->offset,
-                            modelw->scale);
+            model_to_screen(row0_model, &row0_screen);
+            model_to_screen(row1_model, &row1_screen);
 
             SDL_RenderDrawLineF(renderer, row0_screen.x, row0_screen.y,
                                 row1_screen.x, row1_screen.y);
