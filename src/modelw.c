@@ -87,33 +87,36 @@ static void make_tile_shaped_tool_rect(struct tool_rect *tool_rect,
 {
     make_tool_rect(tool_rect, mouse_screen_coord);
 
-    // helper points
-    SDL_FPoint screen_coord = {0, 0};
-    SDL_FPoint model_coord = {0, 0};
-
     // make tool_rect in model coords
-    screen_coord.x = tool_rect->rect.x;
-    screen_coord.y = tool_rect->rect.y;
-    screen_to_model(screen_coord, &model_coord);
-    SDL_FRect tool_rect_model_coord = {model_coord.x, model_coord.y,
-                                       tool_rect->rect.w / scale,
-                                       tool_rect->rect.h / scale};
+    SDL_FRect tool_rect_model_coord = {0, 0, 0, 0};
+    rect_screen_to_model(tool_rect->rect, &tool_rect_model_coord);
 
     // make grid_rect in model coords
     int map_size_px = app->map->size * app->map->tile_size;
     SDL_FRect grid_rect_model_coord = {0, 0, map_size_px, map_size_px};
 
-    SDL_FRect intersect_model_coord = {0, 0, 0, 0};
+    SDL_FRect intersect = {0, 0, 0, 0};
     if (SDL_IntersectFRect(&grid_rect_model_coord, &tool_rect_model_coord,
-                           &intersect_model_coord)) {
-        // make intersect_rect in screen coords
-        model_coord.x = intersect_model_coord.x;
-        model_coord.y = intersect_model_coord.y;
-        model_to_screen(model_coord, &screen_coord);
-        tool_rect->rect.x = screen_coord.x;
-        tool_rect->rect.y = screen_coord.y;
-        tool_rect->rect.w = intersect_model_coord.w * scale;
-        tool_rect->rect.h = intersect_model_coord.h * scale;
+                           &intersect)) {
+        int tile_size = app->map->tile_size;
+
+        // floor intersect origin to tile index (i*tile) and save the difference
+        int x = (int)(intersect.x / tile_size) * tile_size;
+        int diff_x = intersect.x - x;
+        intersect.x = x;
+        int y = (int)(intersect.y / tile_size) * tile_size;
+        int diff_y = intersect.y - y;
+        intersect.y = y;
+
+        // ceil intersect sz to tile index (j*tile) n clamp if bigger than mapsz
+        intersect.w = (int)((intersect.w + diff_x) / tile_size + 1) * tile_size;
+        if ((intersect.x + intersect.w) > grid_rect_model_coord.w)
+            intersect.w = grid_rect_model_coord.w - intersect.x;
+        intersect.h = (int)((intersect.h + diff_y) / tile_size + 1) * tile_size;
+        if ((intersect.y + intersect.h) > grid_rect_model_coord.h)
+            intersect.h = grid_rect_model_coord.h - intersect.y;
+
+        rect_model_to_screen(intersect, &app->modelw.tool_rect.rect);
 
     } else {
         tool_rect->rect.x = tool_rect->rect.y = -1;
