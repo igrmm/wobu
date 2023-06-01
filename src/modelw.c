@@ -19,6 +19,30 @@ static void screen_to_model(SDL_FPoint screen_coord, SDL_FPoint *model_coord)
     model_coord->y = screen_coord.y / scale + offset.y;
 }
 
+static void rect_model_to_screen(SDL_FRect rect_model_coord,
+                                 SDL_FRect *rect_screen_coord)
+{
+    SDL_FPoint model_coord = {rect_model_coord.x, rect_model_coord.y};
+    SDL_FPoint screen_coord = {0, 0};
+    model_to_screen(model_coord, &screen_coord);
+    rect_screen_coord->x = screen_coord.x;
+    rect_screen_coord->y = screen_coord.y;
+    rect_screen_coord->w = rect_model_coord.w * scale;
+    rect_screen_coord->h = rect_model_coord.h * scale;
+}
+
+static void rect_screen_to_model(SDL_FRect rect_screen_coord,
+                                 SDL_FRect *rect_model_coord)
+{
+    SDL_FPoint screen_coord = {rect_screen_coord.x, rect_screen_coord.y};
+    SDL_FPoint model_coord = {0, 0};
+    screen_to_model(screen_coord, &model_coord);
+    rect_model_coord->x = model_coord.x;
+    rect_model_coord->y = model_coord.y;
+    rect_model_coord->w = rect_screen_coord.w / scale;
+    rect_model_coord->h = rect_screen_coord.h / scale;
+}
+
 void reset_pan_and_zoom(struct app *app)
 {
     int map_size = app->map->size * app->map->tile_size;
