@@ -57,6 +57,46 @@ static void make_tool_rect(struct tool_rect *tool_rect,
     }
 }
 
+static void make_tile_shaped_tool_rect(struct tool_rect *tool_rect,
+                                       SDL_FPoint mouse_screen_coord,
+                                       struct app *app)
+{
+    make_tool_rect(tool_rect, mouse_screen_coord);
+
+    // helper points
+    SDL_FPoint screen_coord = {0, 0};
+    SDL_FPoint model_coord = {0, 0};
+
+    // make tool_rect in model coords
+    screen_coord.x = tool_rect->rect.x;
+    screen_coord.y = tool_rect->rect.y;
+    screen_to_model(screen_coord, &model_coord);
+    SDL_FRect tool_rect_model_coord = {model_coord.x, model_coord.y,
+                                       tool_rect->rect.w / scale,
+                                       tool_rect->rect.h / scale};
+
+    // make grid_rect in model coords
+    int map_size_px = app->map->size * app->map->tile_size;
+    SDL_FRect grid_rect_model_coord = {0, 0, map_size_px, map_size_px};
+
+    SDL_FRect intersect_model_coord = {0, 0, 0, 0};
+    if (SDL_IntersectFRect(&grid_rect_model_coord, &tool_rect_model_coord,
+                           &intersect_model_coord)) {
+        // make intersect_rect in screen coords
+        model_coord.x = intersect_model_coord.x;
+        model_coord.y = intersect_model_coord.y;
+        model_to_screen(model_coord, &screen_coord);
+        tool_rect->rect.x = screen_coord.x;
+        tool_rect->rect.y = screen_coord.y;
+        tool_rect->rect.w = intersect_model_coord.w * scale;
+        tool_rect->rect.h = intersect_model_coord.h * scale;
+
+    } else {
+        tool_rect->rect.x = tool_rect->rect.y = -1;
+        tool_rect->rect.w = tool_rect->rect.h = 0;
+    }
+}
+
 void reset_tool_rect(struct tool_rect *tool_rect)
 {
     tool_rect->rect.x = tool_rect->rect.y = -1;
@@ -85,7 +125,8 @@ static void pencil_tool_alt(SDL_FPoint mouse_screen_coord, Uint8 state,
                             struct app *app)
 {
     if (state == SDL_PRESSED) {
-        make_tool_rect(&app->modelw.tool_rect, mouse_screen_coord);
+        make_tile_shaped_tool_rect(&app->modelw.tool_rect, mouse_screen_coord,
+                                   app);
 
     } else if (state == SDL_RELEASED) {
         reset_tool_rect(&app->modelw.tool_rect);
