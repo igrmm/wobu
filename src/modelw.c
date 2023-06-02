@@ -156,6 +156,23 @@ static void pencil_tool_alt(SDL_FPoint mouse_screen_coord, Uint8 state,
                                    app);
 
     } else if (state == SDL_RELEASED) {
+        if (!SDL_FRectEmpty(&app->modelw.tool_rect.rect)) {
+            SDL_FRect tool_rect_model_coord = {0, 0, 0, 0};
+            rect_screen_to_model(app->modelw.tool_rect.rect,
+                                 &tool_rect_model_coord);
+            int i0 = tool_rect_model_coord.x / app->map->tile_size;
+            int j0 = tool_rect_model_coord.y / app->map->tile_size;
+            int i1 = (tool_rect_model_coord.x + tool_rect_model_coord.w) /
+                     app->map->tile_size;
+            int j1 = (tool_rect_model_coord.y + tool_rect_model_coord.h) /
+                     app->map->tile_size;
+            for (int i = i0; i < i1; i++) {
+                for (int j = j0; j < j1; j++) {
+                    app->map->tiles[i][j].x = app->tileset_selected.x;
+                    app->map->tiles[i][j].y = app->tileset_selected.y;
+                }
+            }
+        }
         reset_tool_rect(&app->modelw.tool_rect);
     }
 }
