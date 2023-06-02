@@ -116,7 +116,7 @@ static void make_tile_shaped_tool_rect(struct tool_rect *tool_rect,
         if ((intersect.y + intersect.h) > grid_rect_model_coord.h)
             intersect.h = grid_rect_model_coord.h - intersect.y;
 
-        rect_model_to_screen(intersect, &app->modelw.tool_rect.rect);
+        tool_rect->rect = intersect;
 
     } else {
         tool_rect->rect.x = tool_rect->rect.y = -1;
@@ -157,9 +157,7 @@ static void pencil_tool_alt(SDL_FPoint mouse_screen_coord, Uint8 state,
 
     } else if (state == SDL_RELEASED) {
         if (!SDL_FRectEmpty(&app->modelw.tool_rect.rect)) {
-            SDL_FRect tool_rect_model_coord = {0, 0, 0, 0};
-            rect_screen_to_model(app->modelw.tool_rect.rect,
-                                 &tool_rect_model_coord);
+            SDL_FRect tool_rect_model_coord = app->modelw.tool_rect.rect;
             int i0 = tool_rect_model_coord.x / app->map->tile_size;
             int j0 = tool_rect_model_coord.y / app->map->tile_size;
             int i1 = (tool_rect_model_coord.x + tool_rect_model_coord.w) /
@@ -338,6 +336,9 @@ void model_window_render(SDL_Renderer *renderer, struct app *app)
     if (app->modelw.tool_rect.rect.w > 0 || app->modelw.tool_rect.rect.h > 0) {
         SDL_Color c = app->modelw.current_tool->rect_color;
         SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
-        SDL_RenderDrawRectF(renderer, &app->modelw.tool_rect.rect);
+        SDL_FRect tool_rect_screen_coord = {0, 0, 0, 0};
+        rect_model_to_screen(app->modelw.tool_rect.rect,
+                             &tool_rect_screen_coord);
+        SDL_RenderDrawRectF(renderer, &tool_rect_screen_coord);
     }
 }
