@@ -7,6 +7,7 @@
 #include "map.h"
 #include "menuw.h"
 #include "modelw.h"
+#include "propertiesw.h"
 #include "statusw.h"
 #include "tilesetw.h"
 #include "toolsw.h"
@@ -81,6 +82,9 @@ int app_run(struct app *app, struct nk_context *ctx)
 
     if (app->show_tilesetw)
         tileset_window(app, ctx, WINDOW_FLAGS);
+
+    if (app->show_propertiesw)
+        properties_window(app, ctx, WINDOW_FLAGS);
 
     status_window(app, ctx);
     menu_window(app, ctx);

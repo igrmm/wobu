@@ -15,7 +15,7 @@ struct app {
     struct map *map;
     struct modelw modelw;
     struct fps_counter fps_counter;
-    int show_grid, show_toolsw, show_tilesetw;
+    int show_grid, show_toolsw, show_tilesetw, show_propertiesw;
 };
 
 int app_init(struct app *app, SDL_Renderer *renderer);

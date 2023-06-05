@@ -32,7 +32,7 @@ int menu_window(struct app *app, struct nk_context *ctx)
         }
 
         if (nk_menu_begin_label(ctx, "view", NK_TEXT_ALIGN_LEFT,
-                                nk_vec2(100, 100))) {
+                                nk_vec2(100, 120))) {
             nk_layout_row_dynamic(ctx, h, 1);
 
             // grid
@@ -58,6 +58,15 @@ int menu_window(struct app *app, struct nk_context *ctx)
 
             if (nk_menu_item_label(ctx, tilesetw_title, NK_TEXT_LEFT))
                 app->show_tilesetw = !app->show_tilesetw;
+
+            // properties window
+            char propertiesw_title[] = "*properties";
+            if (!app->show_propertiesw)
+                SDL_snprintf(propertiesw_title, sizeof propertiesw_title,
+                             " properties");
+
+            if (nk_menu_item_label(ctx, propertiesw_title, NK_TEXT_LEFT))
+                app->show_propertiesw = !app->show_propertiesw;
 
             nk_menu_end(ctx);
         }

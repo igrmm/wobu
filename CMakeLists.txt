@@ -22,6 +22,7 @@ add_executable(${PROJECT_NAME}
     src/menuw.c
     src/toolsw.c
     src/map.c
+    src/propertiesw.c
     )
 
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
