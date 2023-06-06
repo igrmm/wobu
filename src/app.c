@@ -43,6 +43,14 @@ int app_init(struct app *app, SDL_Renderer *renderer)
     }
     app->modelw.tools[PENCIL] = tool_init(PENCIL, pencil_texture, 0, 255, 0);
 
+    SDL_Texture *eraser_texture =
+        IMG_LoadTexture(renderer, "../assets/eraser.png");
+    if (eraser_texture == NULL) {
+        SDL_Log("SDL error in eraser creation: %s", SDL_GetError());
+        return 0;
+    }
+    app->modelw.tools[ERASER] = tool_init(ERASER, eraser_texture, 255, 0, 0);
+
     reset_tool_rect(&app->modelw.tool_rect);
 
     app->map = map_create();

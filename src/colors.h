@@ -11,5 +11,10 @@
     {                                                                          \
         0, 200, 150, 255                                                       \
     }
+#define RED                                                                    \
+    (struct nk_color)                                                          \
+    {                                                                          \
+        128, 0, 0, 255                                                         \
+    }
 
 #endif
