@@ -1,5 +1,6 @@
 #include "SDL.h"
 
+#include "SDL_mouse.h"
 #include "app.h"
 #include "modelw.h"
 
@@ -131,31 +132,33 @@ void reset_tool_rect(struct tool_rect *tool_rect)
     tool_rect->start.x = tool_rect->start.y = -1;
 }
 
-static void pencil_tool(SDL_FPoint mouse_screen_coord, struct app *app)
+static void pencil_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
+                        Uint8 state, struct app *app)
 {
-    SDL_FPoint mouse;
-    screen_to_model(mouse_screen_coord, &mouse);
+    if (button == SDL_BUTTON_LEFT) {
+        SDL_FPoint mouse;
+        screen_to_model(mouse_screen_coord, &mouse);
 
-    int map_size_px = app->map->size * app->map->tile_size;
-    SDL_FRect grid_rect = {0, 0, map_size_px, map_size_px};
+        int map_size_px = app->map->size * app->map->tile_size;
+        SDL_FRect grid_rect = {0, 0, map_size_px, map_size_px};
 
-    if (SDL_PointInFRect(&mouse, &grid_rect)) {
-        int tile_x = mouse.x / app->map->tile_size;
-        int tile_y = mouse.y / app->map->tile_size;
+        if (SDL_PointInFRect(&mouse, &grid_rect)) {
+            int tile_x = mouse.x / app->map->tile_size;
+            int tile_y = mouse.y / app->map->tile_size;
 
-        app->map->tiles[tile_x][tile_y].x = app->tileset_selected.x;
-        app->map->tiles[tile_x][tile_y].y = app->tileset_selected.y;
+            app->map->tiles[tile_x][tile_y].x = app->tileset_selected.x;
+            app->map->tiles[tile_x][tile_y].y = app->tileset_selected.y;
+        }
+        return;
     }
-}
 
-static void pencil_tool_alt(SDL_FPoint mouse_screen_coord, Uint8 state,
-                            struct app *app)
-{
-    if (state == SDL_PRESSED) {
+    if (button == SDL_BUTTON_RIGHT && state == SDL_PRESSED) {
         make_tile_shaped_tool_rect(&app->modelw.tool_rect, mouse_screen_coord,
                                    app);
+        return;
+    }
 
-    } else if (state == SDL_RELEASED) {
+    if (button == SDL_BUTTON_RIGHT && state == SDL_RELEASED) {
         if (!SDL_FRectEmpty(&app->modelw.tool_rect.rect)) {
             SDL_FRect tool_rect_model_coord = app->modelw.tool_rect.rect;
             int i0 = tool_rect_model_coord.x / app->map->tile_size;
@@ -172,6 +175,7 @@ static void pencil_tool_alt(SDL_FPoint mouse_screen_coord, Uint8 state,
             }
         }
         reset_tool_rect(&app->modelw.tool_rect);
+        return;
     }
 }
 
@@ -199,10 +203,9 @@ static void evt_mouse_wheel(SDL_MouseWheelEvent *evt, struct app *app)
 static void evt_mouse_down(SDL_MouseButtonEvent *evt, struct app *app)
 {
     SDL_FPoint mouse = {evt->x, evt->y};
-    Uint8 state = evt->state;
 
-    if (evt->button == SDL_BUTTON_LEFT) {
-        pencil_tool(mouse, app);
+    if (evt->button == SDL_BUTTON_LEFT || evt->button == SDL_BUTTON_RIGHT) {
+        pencil_tool(mouse, evt->button, evt->state, app);
 
     } else if (evt->button == SDL_BUTTON_MIDDLE) {
         if (evt->clicks == 2) {
@@ -212,38 +215,31 @@ static void evt_mouse_down(SDL_MouseButtonEvent *evt, struct app *app)
             pan_start.x = mouse.x;
             pan_start.y = mouse.y;
         }
-
-    } else if (evt->button == SDL_BUTTON_RIGHT) {
-        pencil_tool_alt(mouse, state, app);
     }
 }
 
 static void evt_mouse_up(SDL_MouseButtonEvent *evt, struct app *app)
 {
     SDL_FPoint mouse = {evt->x, evt->y};
-    Uint8 state = evt->state;
 
     if (evt->button == SDL_BUTTON_RIGHT) {
-        pencil_tool_alt(mouse, state, app);
+        pencil_tool(mouse, evt->button, evt->state, app);
     }
 }
 
 static void evt_mouse_motion(SDL_MouseMotionEvent *evt, struct app *app)
 {
     SDL_FPoint mouse = {evt->x, evt->y};
-    Uint32 button = evt->state;
 
-    if (button == SDL_BUTTON_LMASK) {
-        pencil_tool(mouse, app);
+    if (evt->state == SDL_BUTTON_LMASK || evt->state == SDL_BUTTON_RMASK) {
+        Uint8 button = (evt->state >> 1) + 1; // inverse of SDL_BUTTON() macro
+        pencil_tool(mouse, button, SDL_PRESSED, app);
 
-    } else if (button == SDL_BUTTON_MMASK) {
+    } else if (evt->state == SDL_BUTTON_MMASK) {
         offset.x -= (mouse.x - pan_start.x) / scale;
         offset.y -= (mouse.y - pan_start.y) / scale;
         pan_start.x = mouse.x;
         pan_start.y = mouse.y;
-
-    } else if (button == SDL_BUTTON_RMASK) {
-        pencil_tool_alt(mouse, SDL_PRESSED, app);
     }
 }
 
