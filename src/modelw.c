@@ -1,6 +1,5 @@
 #include "SDL.h"
 
-#include "SDL_mouse.h"
 #include "app.h"
 #include "modelw.h"
 
@@ -42,6 +41,25 @@ static void rect_screen_to_model(SDL_FRect rect_screen_coord,
     rect_model_coord->y = model_coord.y;
     rect_model_coord->w = rect_screen_coord.w / scale;
     rect_model_coord->h = rect_screen_coord.h / scale;
+}
+
+static void zoom(SDL_FPoint mouse_screen_coord, int mouse_wheel_y)
+{
+    SDL_FPoint mouse_model_before_zoom = {0, 0};
+    screen_to_model(mouse_screen_coord, &mouse_model_before_zoom);
+
+    if (mouse_wheel_y > 0) {
+        scale *= 1.1f;
+
+    } else if (mouse_wheel_y < 0) {
+        scale *= 0.9f;
+    }
+
+    SDL_FPoint mouse_model_after_zoom = {0, 0};
+    screen_to_model(mouse_screen_coord, &mouse_model_after_zoom);
+
+    offset.x += (mouse_model_before_zoom.x - mouse_model_after_zoom.x);
+    offset.y += (mouse_model_before_zoom.y - mouse_model_after_zoom.y);
 }
 
 void reset_pan_and_zoom(struct app *app)
@@ -183,21 +201,7 @@ static void evt_mouse_wheel(SDL_MouseWheelEvent *evt, struct app *app)
 {
     SDL_FPoint mouse = {evt->mouseX, evt->mouseY};
 
-    SDL_FPoint mouse_model_before_zoom = {0, 0};
-    screen_to_model(mouse, &mouse_model_before_zoom);
-
-    if (evt->y > 0) {
-        scale *= 1.1f;
-
-    } else if (evt->y < 0) {
-        scale *= 0.9f;
-    }
-
-    SDL_FPoint mouse_model_after_zoom = {0, 0};
-    screen_to_model(mouse, &mouse_model_after_zoom);
-
-    offset.x += (mouse_model_before_zoom.x - mouse_model_after_zoom.x);
-    offset.y += (mouse_model_before_zoom.y - mouse_model_after_zoom.y);
+    zoom(mouse, evt->y);
 }
 
 static void evt_mouse_down(SDL_MouseButtonEvent *evt, struct app *app)
