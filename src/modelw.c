@@ -211,6 +211,23 @@ static void pencil_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
     }
 }
 
+static void tool_update(SDL_FPoint mouse_screen_coord, Uint8 button,
+                        Uint8 state, struct app *app)
+{
+    switch (app->modelw.current_tool->type) {
+
+    case PENCIL:
+        pencil_tool(mouse_screen_coord, button, state, app);
+        break;
+
+    case ERASER:
+        break;
+
+    default:
+        break;
+    }
+}
+
 static void evt_mouse_wheel(SDL_MouseWheelEvent *evt, struct app *app)
 {
     SDL_FPoint mouse = {evt->mouseX, evt->mouseY};
@@ -223,7 +240,7 @@ static void evt_mouse_down(SDL_MouseButtonEvent *evt, struct app *app)
     SDL_FPoint mouse = {evt->x, evt->y};
 
     if (evt->button == SDL_BUTTON_LEFT || evt->button == SDL_BUTTON_RIGHT) {
-        pencil_tool(mouse, evt->button, evt->state, app);
+        tool_update(mouse, evt->button, evt->state, app);
 
     } else if (evt->button == SDL_BUTTON_MIDDLE) {
         if (evt->clicks == 2) {
@@ -240,7 +257,7 @@ static void evt_mouse_up(SDL_MouseButtonEvent *evt, struct app *app)
     SDL_FPoint mouse = {evt->x, evt->y};
 
     if (evt->button == SDL_BUTTON_RIGHT) {
-        pencil_tool(mouse, evt->button, evt->state, app);
+        tool_update(mouse, evt->button, evt->state, app);
     }
 }
 
@@ -250,7 +267,7 @@ static void evt_mouse_motion(SDL_MouseMotionEvent *evt, struct app *app)
 
     if (evt->state == SDL_BUTTON_LMASK || evt->state == SDL_BUTTON_RMASK) {
         Uint8 button = (evt->state >> 1) + 1; // inverse of SDL_BUTTON() macro
-        pencil_tool(mouse, button, SDL_PRESSED, app);
+        tool_update(mouse, button, SDL_PRESSED, app);
 
     } else if (evt->state == SDL_BUTTON_MMASK) {
         pan(evt->type, mouse);
