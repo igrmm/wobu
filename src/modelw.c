@@ -62,6 +62,20 @@ static void zoom(SDL_FPoint mouse_screen_coord, int mouse_wheel_y)
     offset.y += (mouse_model_before_zoom.y - mouse_model_after_zoom.y);
 }
 
+static void pan(Uint32 evt_type, SDL_FPoint mouse_screen_coord)
+{
+    if (evt_type == SDL_MOUSEBUTTONDOWN) {
+        pan_start.x = mouse_screen_coord.x;
+        pan_start.y = mouse_screen_coord.y;
+
+    } else if (evt_type == SDL_MOUSEMOTION) {
+        offset.x -= (mouse_screen_coord.x - pan_start.x) / scale;
+        offset.y -= (mouse_screen_coord.y - pan_start.y) / scale;
+        pan_start.x = mouse_screen_coord.x;
+        pan_start.y = mouse_screen_coord.y;
+    }
+}
+
 void reset_pan_and_zoom(struct app *app)
 {
     int map_size = app->map->size * app->map->tile_size;
@@ -216,8 +230,7 @@ static void evt_mouse_down(SDL_MouseButtonEvent *evt, struct app *app)
             reset_pan_and_zoom(app);
 
         } else {
-            pan_start.x = mouse.x;
-            pan_start.y = mouse.y;
+            pan(evt->type, mouse);
         }
     }
 }
@@ -240,10 +253,7 @@ static void evt_mouse_motion(SDL_MouseMotionEvent *evt, struct app *app)
         pencil_tool(mouse, button, SDL_PRESSED, app);
 
     } else if (evt->state == SDL_BUTTON_MMASK) {
-        offset.x -= (mouse.x - pan_start.x) / scale;
-        offset.y -= (mouse.y - pan_start.y) / scale;
-        pan_start.x = mouse.x;
-        pan_start.y = mouse.y;
+        pan(evt->type, mouse);
     }
 }
 
