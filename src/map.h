@@ -5,6 +5,31 @@
 
 #define TILES_MAX 100
 #define MAP_JSTR_BUFSIZ 1000000
+#define ENTITY_STR_BUFSIZ 24
+
+enum map_entity_value_type { NUMBER, STRING, BOOL };
+
+union map_entity_value {
+    int number;
+    char string[ENTITY_STR_BUFSIZ];
+    int bool;
+};
+
+struct map_entity_item {
+    char key[ENTITY_STR_BUFSIZ];
+    enum map_entity_value_type type;
+    union map_entity_value value;
+};
+
+struct map_entity {
+    struct map_entity_item *start;
+    struct map_entity_item *next;
+};
+
+struct map_entity_list {
+    struct map_entity *start;
+    struct map_entity *next;
+};
 
 struct map {
     int size;
