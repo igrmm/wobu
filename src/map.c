@@ -130,9 +130,10 @@ int map_deserialize(struct map *map, const char *path)
 
     // READ JSON STRING FROM FILE
     for (size_t i = 0; i < MAP_JSTR_BUFSIZ; i++) {
-        SDL_RWread(file, &map_jstr[i], sizeof(char), 1);
-        if (map_jstr[i] == 0)
+        if (SDL_RWread(file, &map_jstr[i], sizeof(char), 1) <= 0) {
+            map_jstr[i] = 0;
             break;
+        }
     }
     SDL_RWclose(file);
 
