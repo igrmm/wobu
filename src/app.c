@@ -1,5 +1,6 @@
 #include "SDL.h"
 #include "SDL_image.h"
+#include "external/json.h"
 
 #include "app.h"
 #include "calc.h"
@@ -12,9 +13,103 @@
 #include "tilesetw.h"
 #include "toolsw.h"
 
+#define ENTITIES_JSTR_BUFSIZ 1024
+
 static const int WINDOW_FLAGS = NK_WINDOW_BORDER | NK_WINDOW_SCALABLE |
                                 NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
                                 NK_WINDOW_CLOSABLE;
+
+static struct map_entity_list *app_deserialize_entities(const char *path)
+{
+    Uint32 now = SDL_GetTicks64();
+    char entities_jstr[ENTITIES_JSTR_BUFSIZ];
+    entities_jstr[0] = 0; // ALWAYS INITIALIZE C STRINGS
+
+    SDL_RWops *file = SDL_RWFromFile(path, "r");
+
+    if (file == NULL) {
+        SDL_Log("Error opening file to load entities.");
+        return 0;
+    }
+
+    // READ JSON STRING FROM FILE
+    for (size_t i = 0; i < ENTITIES_JSTR_BUFSIZ; i++) {
+        if (SDL_RWread(file, &entities_jstr[i], sizeof(char), 1) <= 0) {
+            entities_jstr[i] = 0;
+            break;
+        }
+    }
+    SDL_RWclose(file);
+
+    size_t len = SDL_strlen(entities_jstr);
+
+    SDL_Log("Entities loaded from file into json string: %zu bytes.", len);
+
+    // DESERIALIZE JSON STRING
+    // todo: json error handling
+    struct json_value_s *json = json_parse(entities_jstr, len);
+    if (json == NULL) {
+        SDL_Log("Failed parsing json when loading entities for app.");
+        return NULL;
+    }
+
+    struct json_object_s *json_root = (struct json_object_s *)json->payload;
+    struct json_object_element_s *entities_object = json_root->start;
+    struct json_array_s *entities_array =
+        json_value_as_array(entities_object->value);
+
+    // LOOP THROUGH ENTITIES
+    int number_of_entities = 1;
+    struct json_array_element_s *ent_array_obj = entities_array->start;
+    for (size_t i = 0; i < entities_array->length; i++) {
+        struct json_object_s *ent_obj =
+            (struct json_object_s *)ent_array_obj->value->payload;
+
+        // LOOP THROUGH ENTITY ITEMS
+        int number_of_items = 1;
+        struct json_object_element_s *ent_item = ent_obj->start;
+        while (ent_item != NULL) {
+            SDL_Log("entity item K: %s", ent_item->name->string);
+
+            switch (ent_item->value->type) {
+
+            case json_type_string: {
+                struct json_string_s *value_string =
+                    json_value_as_string(ent_item->value);
+                const char *value = value_string->string;
+                SDL_Log("entity item V: %s", value);
+            } break;
+
+            case json_type_number: {
+                struct json_number_s *value_number =
+                    json_value_as_number(ent_item->value);
+                int value = SDL_strtol(value_number->number, NULL, 10);
+                SDL_Log("entity item V: %i", value);
+            } break;
+
+            default:
+                break;
+            }
+
+            number_of_items++;
+            if (number_of_items > 10) // max entity items = 10
+                break;
+            ent_item = ent_item->next;
+        }
+
+        number_of_entities++;
+        if (number_of_entities > 10) // max entities = 10
+            break;
+        ent_array_obj = ent_array_obj->next;
+    }
+
+    SDL_Log("App entities deserialized with %i entities in %i ms.",
+            --number_of_entities, (int)(SDL_GetTicks64() - now));
+
+    SDL_free(json);
+
+    return NULL;
+}
 
 static struct tool tool_init(enum tool_type tool_type, SDL_Texture *texture,
                              int r, int g, int b)
@@ -74,6 +169,8 @@ int app_init(struct app *app, SDL_Renderer *renderer)
     app->show_grid = 1;
     app->show_toolsw = 1;
     app->show_tilesetw = 1;
+
+    app_deserialize_entities("../assets/entities.json");
 
     return 1;
 }
