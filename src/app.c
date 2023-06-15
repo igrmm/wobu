@@ -111,6 +111,27 @@ static struct map_entity_list *app_deserialize_entities(const char *path)
     return NULL;
 }
 
+static void app_destroy_entities(struct map_entity *entities)
+{
+    // LOOP THROUGH ENTITIES
+    struct map_entity *entity = entities;
+    while (entity != NULL) {
+
+        // LOOP THROUGH ITEMS OF CURRENT ENTITY AND DESTROY
+        struct map_entity_item *item = entity->item;
+        while (item != NULL) {
+            struct map_entity_item *next_item = item->next;
+            SDL_free(item);
+            item = next_item;
+        }
+
+        // DESTROY CURRENT ENTITY
+        struct map_entity *next_entity = entity->next;
+        SDL_free(entity);
+        entity = next_entity;
+    }
+}
+
 static struct tool tool_init(enum tool_type tool_type, SDL_Texture *texture,
                              int r, int g, int b)
 {
