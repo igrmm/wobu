@@ -109,7 +109,9 @@ static struct map_entity_list *app_deserialize_entities(const char *path)
             } break;
 
             default:
-                break;
+                SDL_Log("json value type not supported: %zu [name=%s]",
+                        ent_item->value->type, ent_item->name->string);
+                return NULL;
             }
 
             number_of_items++;
