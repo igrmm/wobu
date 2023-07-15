@@ -26,6 +26,9 @@ add_executable(${PROJECT_NAME}
     )
 
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    if (DEFINED ENV{SANITIZERS})
+        set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} $ENV{SANITIZERS}")
+    endif()
     target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror=vla)
 endif()
 
