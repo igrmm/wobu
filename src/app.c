@@ -40,7 +40,7 @@ static void app_destroy_entities(struct map_entity *entities)
     }
 }
 
-static struct map_entity_list *app_deserialize_entities(const char *path)
+static struct map_entity *app_deserialize_entities(const char *path)
 {
     Uint32 now = SDL_GetTicks64();
     char entities_jstr[ENTITIES_JSTR_BUFSIZ];
@@ -79,6 +79,9 @@ static struct map_entity_list *app_deserialize_entities(const char *path)
     struct json_array_s *entities_array =
         json_value_as_array(entities_object->value);
 
+    struct map_entity *entities = NULL;
+    struct map_entity **entity = &entities;
+
     // LOOP THROUGH ENTITIES
     int number_of_entities = 1;
     struct json_array_element_s *ent_array_obj = entities_array->start;
@@ -89,8 +92,18 @@ static struct map_entity_list *app_deserialize_entities(const char *path)
         // LOOP THROUGH ENTITY ITEMS
         int number_of_items = 1;
         struct json_object_element_s *ent_item = ent_obj->start;
+
+        *entity = SDL_malloc(sizeof(struct map_entity));
+        (*entity)->next = NULL;
+        struct map_entity_item **item = &(*entity)->item;
+
         while (ent_item != NULL) {
             SDL_Log("entity item K: %s", ent_item->name->string);
+
+            *item = SDL_malloc(sizeof(struct map_entity_item));
+            (*item)->next = NULL;
+            SDL_snprintf((*item)->name, sizeof((*item)->name), "%s",
+                         ent_item->name->string);
 
             switch (ent_item->value->type) {
 
@@ -98,14 +111,19 @@ static struct map_entity_list *app_deserialize_entities(const char *path)
                 struct json_string_s *value_string =
                     json_value_as_string(ent_item->value);
                 const char *value = value_string->string;
-                SDL_Log("entity item V: %s", value);
+                SDL_Log("entity item V: %s type string", value);
+                (*item)->type = STRING;
+                SDL_snprintf((*item)->value.string,
+                             sizeof((*item)->value.string), "%s", value);
             } break;
 
             case json_type_number: {
                 struct json_number_s *value_number =
                     json_value_as_number(ent_item->value);
                 int value = SDL_strtol(value_number->number, NULL, 10);
-                SDL_Log("entity item V: %i", value);
+                SDL_Log("entity item V: %i type number", value);
+                (*item)->type = NUMBER;
+                (*item)->value.number = value;
             } break;
 
             default:
@@ -114,11 +132,15 @@ static struct map_entity_list *app_deserialize_entities(const char *path)
                 return NULL;
             }
 
+            item = &(*item)->next;
+
             number_of_items++;
             if (number_of_items > 10) // max entity items = 10
                 break;
             ent_item = ent_item->next;
         }
+
+        entity = &(*entity)->next;
 
         number_of_entities++;
         if (number_of_entities > 10) // max entities = 10
@@ -131,7 +153,7 @@ static struct map_entity_list *app_deserialize_entities(const char *path)
 
     SDL_free(json);
 
-    return NULL;
+    return entities;
 }
 
 static struct tool tool_init(enum tool_type tool_type, SDL_Texture *texture,
@@ -193,7 +215,11 @@ int app_init(struct app *app, SDL_Renderer *renderer)
     app->show_toolsw = 1;
     app->show_tilesetw = 1;
 
-    app_deserialize_entities("../assets/entities.json");
+    struct map_entity *entities =
+        app_deserialize_entities("../assets/entities.json");
+    SDL_Log("TEST: first entity first item: %s=%s", entities->item->name,
+            entities->item->value.string);
+    app_destroy_entities(entities);
 
     return 1;
 }
