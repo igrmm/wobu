@@ -210,6 +210,7 @@ int app_init(struct app *app, SDL_Renderer *renderer)
                               &app->screen_height);
     reset_pan_and_zoom(app);
 
+    app->selected_entities = NULL;
     app->modelw.current_tool = &app->modelw.tools[PENCIL];
     app->tileset_texture = tileset_texture;
     app->tileset_selected = nk_vec2(-1, -1);
@@ -262,6 +263,9 @@ void app_deinit(struct app *app)
 
     if (app->entity_templates != NULL)
         destroy_entity_templates(app->entity_templates);
+
+    if (app->selected_entities != NULL)
+        destroy_entity_templates(app->selected_entities);
 
     IMG_Quit();
 }
