@@ -13,6 +13,7 @@ struct app {
     SDL_Texture *tileset_texture;
     struct nk_vec2 tileset_selected;
     struct map *map;
+    struct map_entity *entity_templates;
     struct modelw modelw;
     struct fps_counter fps_counter;
     int show_grid, show_toolsw, show_tilesetw, show_propertiesw;

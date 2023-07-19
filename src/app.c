@@ -19,10 +19,10 @@ static const int WINDOW_FLAGS = NK_WINDOW_BORDER | NK_WINDOW_SCALABLE |
                                 NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
                                 NK_WINDOW_CLOSABLE;
 
-static void app_destroy_entities(struct map_entity *entities)
+static void destroy_entity_templates(struct map_entity *entity_templates)
 {
     // LOOP THROUGH ENTITIES
-    struct map_entity *entity = entities;
+    struct map_entity *entity = entity_templates;
     while (entity != NULL) {
 
         // LOOP THROUGH ITEMS OF CURRENT ENTITY AND DESTROY
@@ -40,7 +40,7 @@ static void app_destroy_entities(struct map_entity *entities)
     }
 }
 
-static struct map_entity *app_deserialize_entities(const char *path)
+static struct map_entity *deserialize_entity_templates(const char *path)
 {
     Uint32 now = SDL_GetTicks64();
     char entities_jstr[ENTITIES_JSTR_BUFSIZ];
@@ -79,8 +79,8 @@ static struct map_entity *app_deserialize_entities(const char *path)
     struct json_array_s *entities_array =
         json_value_as_array(entities_object->value);
 
-    struct map_entity *entities = NULL;
-    struct map_entity **entity = &entities;
+    struct map_entity *entity_templates = NULL;
+    struct map_entity **entity = &entity_templates;
 
     // LOOP THROUGH ENTITIES
     int number_of_entities = 1;
@@ -149,7 +149,7 @@ static struct map_entity *app_deserialize_entities(const char *path)
 
     SDL_free(json);
 
-    return entities;
+    return entity_templates;
 }
 
 static struct tool tool_init(enum tool_type tool_type, SDL_Texture *texture,
@@ -197,6 +197,14 @@ int app_init(struct app *app, SDL_Renderer *renderer)
     }
     SDL_Log("Map allocated memory: %i kB", (int)sizeof *app->map / 1024);
 
+    app->entity_templates =
+        deserialize_entity_templates("../assets/entity_templates.json");
+    if (app->entity_templates == NULL) {
+        SDL_Log("Error deserializing app entities.");
+        app_deinit(app);
+        return 0;
+    }
+
     // centralize bg
     SDL_GetRendererOutputSize(renderer, &app->screen_width,
                               &app->screen_height);
@@ -210,10 +218,6 @@ int app_init(struct app *app, SDL_Renderer *renderer)
     app->show_grid = 1;
     app->show_toolsw = 1;
     app->show_tilesetw = 1;
-
-    struct map_entity *entities =
-        app_deserialize_entities("../assets/entities.json");
-    app_destroy_entities(entities);
 
     return 1;
 }
@@ -254,7 +258,10 @@ void app_deinit(struct app *app)
         SDL_DestroyTexture(app->tileset_texture);
 
     if (app->map != NULL)
-        free(app->map);
+        SDL_free(app->map);
+
+    if (app->entity_templates != NULL)
+        destroy_entity_templates(app->entity_templates);
 
     IMG_Quit();
 }
