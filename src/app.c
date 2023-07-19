@@ -50,7 +50,7 @@ static struct map_entity *app_deserialize_entities(const char *path)
 
     if (file == NULL) {
         SDL_Log("Error opening file to load entities.");
-        return 0;
+        return NULL;
     }
 
     // READ JSON STRING FROM FILE
@@ -98,8 +98,6 @@ static struct map_entity *app_deserialize_entities(const char *path)
         struct map_entity_item **item = &(*entity)->item;
 
         while (ent_item != NULL) {
-            SDL_Log("entity item K: %s", ent_item->name->string);
-
             *item = SDL_malloc(sizeof(struct map_entity_item));
             (*item)->next = NULL;
             SDL_snprintf((*item)->name, sizeof((*item)->name), "%s",
@@ -111,7 +109,6 @@ static struct map_entity *app_deserialize_entities(const char *path)
                 struct json_string_s *value_string =
                     json_value_as_string(ent_item->value);
                 const char *value = value_string->string;
-                SDL_Log("entity item V: %s type string", value);
                 (*item)->type = STRING;
                 SDL_snprintf((*item)->value.string,
                              sizeof((*item)->value.string), "%s", value);
@@ -121,7 +118,6 @@ static struct map_entity *app_deserialize_entities(const char *path)
                 struct json_number_s *value_number =
                     json_value_as_number(ent_item->value);
                 int value = SDL_strtol(value_number->number, NULL, 10);
-                SDL_Log("entity item V: %i type number", value);
                 (*item)->type = NUMBER;
                 (*item)->value.number = value;
             } break;
@@ -217,8 +213,6 @@ int app_init(struct app *app, SDL_Renderer *renderer)
 
     struct map_entity *entities =
         app_deserialize_entities("../assets/entities.json");
-    SDL_Log("TEST: first entity first item: %s=%s", entities->item->name,
-            entities->item->value.string);
     app_destroy_entities(entities);
 
     return 1;
