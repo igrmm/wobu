@@ -3,7 +3,6 @@
 #include "external/json.h"
 
 #include "app.h"
-#include "calc.h"
 #include "colors.h"
 #include "map.h"
 #include "menuw.h"

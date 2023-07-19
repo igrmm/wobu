@@ -15,7 +15,6 @@ add_executable(${PROJECT_NAME}
     #WIN32
     src/wobu.c
     src/app.c
-    src/calc.c
     src/tilesetw.c
     src/modelw.c
     src/statusw.c

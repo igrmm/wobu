@@ -1,14 +1,13 @@
 #include "SDL.h"
 
 #include "app.h"
-#include "calc.h"
 #include "statusw.h"
 
 static void query_fps(struct fps_counter *fps_counter)
 {
     Uint32 now = SDL_GetTicks64();
     if (now - fps_counter->timer >= 1000) {
-        int frames = min(fps_counter->frames, 999);
+        int frames = SDL_min(fps_counter->frames, 999);
         SDL_snprintf(fps_counter->fps, sizeof fps_counter->fps, "fps: %i",
                      frames);
         fps_counter->timer = now;

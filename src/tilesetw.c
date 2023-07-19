@@ -1,7 +1,9 @@
-#include "tilesetw.h"
+#include "SDL.h"
+
 #include "app.h"
-#include "calc.h"
+//#include "calc.h"
 #include "colors.h"
+#include "tilesetw.h"
 
 static void select_tile_on_click(struct app *app, struct nk_context *ctx,
                                  struct nk_rect tileset_rect)
@@ -85,8 +87,8 @@ int tileset_window(struct app *app, struct nk_context *ctx, const int flags)
 
         struct nk_command_buffer *canvas = nk_window_get_canvas(ctx);
 
-        float w = min(tileset_w, canvas->clip.w);
-        float h = min(tileset_h, canvas->clip.h);
+        float w = SDL_min(tileset_w, canvas->clip.w);
+        float h = SDL_min(tileset_h, canvas->clip.h);
         struct nk_rect tileset_rect =
             nk_rect(canvas->clip.x, canvas->clip.y, w, h);
 
