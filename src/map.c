@@ -1,6 +1,7 @@
 #include "SDL.h"
 #include "external/json.h"
 
+#include "jsonffile.h"
 #include "map.h"
 
 void map_reset_tiles(struct map *map)
@@ -41,8 +42,8 @@ static int map_jstr_cat(char *map_jstr, const char *fmt, ...)
         return 0;
     }
 
-    len = SDL_strlcat(map_jstr, buffer, MAP_JSTR_BUFSIZ);
-    if (len >= MAP_JSTR_BUFSIZ) {
+    len = SDL_strlcat(map_jstr, buffer, JSON_BUFSIZ);
+    if (len >= JSON_BUFSIZ) {
         SDL_Log("map_jstr_cat error: map_jstr overflow");
         return 0;
     }
@@ -53,7 +54,7 @@ static int map_jstr_cat(char *map_jstr, const char *fmt, ...)
 int map_serialize(struct map *map, const char *path)
 {
     Uint32 now = SDL_GetTicks64();
-    char map_jstr[MAP_JSTR_BUFSIZ];
+    char map_jstr[JSON_BUFSIZ];
     map_jstr[0] = 0; // ALWAYS INITIALIZE C STRINGS
 
     SDL_RWops *file = SDL_RWFromFile(path, "w");
@@ -118,32 +119,14 @@ serialization_error:
 int map_deserialize(struct map *map, const char *path)
 {
     Uint32 now = SDL_GetTicks64();
-    char map_jstr[MAP_JSTR_BUFSIZ];
-    map_jstr[0] = 0; // ALWAYS INITIALIZE C STRINGS
-
-    SDL_RWops *file = SDL_RWFromFile(path, "r");
-
-    if (file == NULL) {
-        SDL_Log("Error opening file to load map.");
+    // DESERIALIZE JSON STRING
+    // todo: json error handling
+    struct json_value_s *json = json_from_file(path);
+    if (json == NULL) {
+        SDL_Log("Error parsing json map.");
         return 0;
     }
 
-    // READ JSON STRING FROM FILE
-    for (size_t i = 0; i < MAP_JSTR_BUFSIZ; i++) {
-        if (SDL_RWread(file, &map_jstr[i], sizeof(char), 1) <= 0) {
-            map_jstr[i] = 0;
-            break;
-        }
-    }
-    SDL_RWclose(file);
-
-    size_t len = SDL_strlen(map_jstr);
-
-    SDL_Log("Map loaded from file into json string: %zu bytes.", len);
-
-    // DESERIALIZE JSON STRING
-    // todo: json error handling
-    struct json_value_s *json = json_parse(map_jstr, len);
     struct json_object_s *json_root = (struct json_object_s *)json->payload;
     struct json_object_element_s *layer_object = json_root->start;
     struct json_array_s *layer_array = json_value_as_array(layer_object->value);

@@ -13,6 +13,7 @@ endforeach()
 
 add_executable(${PROJECT_NAME}
     #WIN32
+    src/jsonffile.c
     src/wobu.c
     src/app.c
     src/tilesetw.c

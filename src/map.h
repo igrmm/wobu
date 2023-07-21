@@ -4,7 +4,6 @@
 #include "SDL.h"
 
 #define TILES_MAX 100
-#define MAP_JSTR_BUFSIZ 1000000
 #define ENTITY_STR_BUFSIZ 24
 
 enum map_entity_type { NUMBER, STRING, BOOL };

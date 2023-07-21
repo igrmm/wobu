@@ -4,6 +4,7 @@
 
 #include "app.h"
 #include "colors.h"
+#include "jsonffile.h"
 #include "map.h"
 #include "menuw.h"
 #include "modelw.h"
@@ -42,32 +43,9 @@ static void destroy_entity_templates(struct map_entity *entity_templates)
 static struct map_entity *deserialize_entity_templates(const char *path)
 {
     Uint32 now = SDL_GetTicks64();
-    char entities_jstr[ENTITIES_JSTR_BUFSIZ];
-    entities_jstr[0] = 0; // ALWAYS INITIALIZE C STRINGS
-
-    SDL_RWops *file = SDL_RWFromFile(path, "r");
-
-    if (file == NULL) {
-        SDL_Log("Error opening file to load entities.");
-        return NULL;
-    }
-
-    // READ JSON STRING FROM FILE
-    for (size_t i = 0; i < ENTITIES_JSTR_BUFSIZ; i++) {
-        if (SDL_RWread(file, &entities_jstr[i], sizeof(char), 1) <= 0) {
-            entities_jstr[i] = 0;
-            break;
-        }
-    }
-    SDL_RWclose(file);
-
-    size_t len = SDL_strlen(entities_jstr);
-
-    SDL_Log("Entities loaded from file into json string: %zu bytes.", len);
-
     // DESERIALIZE JSON STRING
     // todo: json error handling
-    struct json_value_s *json = json_parse(entities_jstr, len);
+    struct json_value_s *json = json_from_file(path);
     if (json == NULL) {
         SDL_Log("Failed parsing json when loading entities for app.");
         return NULL;
