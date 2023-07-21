@@ -19,27 +19,6 @@ static const int WINDOW_FLAGS = NK_WINDOW_BORDER | NK_WINDOW_SCALABLE |
                                 NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
                                 NK_WINDOW_CLOSABLE;
 
-static void destroy_entity_templates(struct map_entity *entity_templates)
-{
-    // LOOP THROUGH ENTITIES
-    struct map_entity *entity = entity_templates;
-    while (entity != NULL) {
-
-        // LOOP THROUGH ITEMS OF CURRENT ENTITY AND DESTROY
-        struct map_entity_item *item = entity->item;
-        while (item != NULL) {
-            struct map_entity_item *next_item = item->next;
-            SDL_free(item);
-            item = next_item;
-        }
-
-        // DESTROY CURRENT ENTITY
-        struct map_entity *next_entity = entity->next;
-        SDL_free(entity);
-        entity = next_entity;
-    }
-}
-
 static struct map_entity *deserialize_entity_templates(const char *path)
 {
     Uint32 now = SDL_GetTicks64();
@@ -239,10 +218,10 @@ void app_deinit(struct app *app)
         SDL_free(app->map);
 
     if (app->entity_templates != NULL)
-        destroy_entity_templates(app->entity_templates);
+        map_destroy_entities(app->entity_templates);
 
     if (app->selected_entities != NULL)
-        destroy_entity_templates(app->selected_entities);
+        map_destroy_entities(app->selected_entities);
 
     IMG_Quit();
 }

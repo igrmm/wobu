@@ -34,6 +34,7 @@ struct map {
 
 struct map *map_create(void);
 void map_reset_tiles(struct map *map);
+void map_destroy_entities(struct map_entity *entities);
 int map_serialize(struct map *map, const char *path);
 int map_deserialize(struct map *map, const char *path);
 
