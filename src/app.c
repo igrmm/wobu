@@ -19,95 +19,6 @@ static const int WINDOW_FLAGS = NK_WINDOW_BORDER | NK_WINDOW_SCALABLE |
                                 NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
                                 NK_WINDOW_CLOSABLE;
 
-static struct map_entity *deserialize_entity_templates(const char *path)
-{
-    Uint32 now = SDL_GetTicks64();
-    // DESERIALIZE JSON STRING
-    // todo: json error handling
-    struct json_value_s *json = json_from_file(path);
-    if (json == NULL) {
-        SDL_Log("Failed parsing json when loading entities for app.");
-        return NULL;
-    }
-
-    struct json_object_s *json_root = (struct json_object_s *)json->payload;
-    struct json_object_element_s *entities_object = json_root->start;
-    struct json_array_s *entities_array =
-        json_value_as_array(entities_object->value);
-
-    struct map_entity *entity_templates = NULL;
-    struct map_entity **entity = &entity_templates;
-
-    // LOOP THROUGH ENTITIES
-    int number_of_entities = 1;
-    struct json_array_element_s *ent_array_obj = entities_array->start;
-    for (size_t i = 0; i < entities_array->length; i++) {
-        struct json_object_s *ent_obj =
-            (struct json_object_s *)ent_array_obj->value->payload;
-
-        // LOOP THROUGH ENTITY ITEMS
-        int number_of_items = 1;
-        struct json_object_element_s *ent_item = ent_obj->start;
-
-        *entity = SDL_malloc(sizeof(struct map_entity));
-        (*entity)->next = NULL;
-        struct map_entity_item **item = &(*entity)->item;
-
-        while (ent_item != NULL) {
-            *item = SDL_malloc(sizeof(struct map_entity_item));
-            (*item)->next = NULL;
-            SDL_snprintf((*item)->name, sizeof((*item)->name), "%s",
-                         ent_item->name->string);
-
-            switch (ent_item->value->type) {
-
-            case json_type_string: {
-                struct json_string_s *value_string =
-                    json_value_as_string(ent_item->value);
-                const char *value = value_string->string;
-                (*item)->type = STRING;
-                SDL_snprintf((*item)->value.string,
-                             sizeof((*item)->value.string), "%s", value);
-            } break;
-
-            case json_type_number: {
-                struct json_number_s *value_number =
-                    json_value_as_number(ent_item->value);
-                int value = SDL_strtol(value_number->number, NULL, 10);
-                (*item)->type = NUMBER;
-                (*item)->value.number = value;
-            } break;
-
-            default:
-                SDL_Log("json value type not supported: %zu [name=%s]",
-                        ent_item->value->type, ent_item->name->string);
-                return NULL;
-            }
-
-            item = &(*item)->next;
-
-            number_of_items++;
-            if (number_of_items > 10) // max entity items = 10
-                break;
-            ent_item = ent_item->next;
-        }
-
-        entity = &(*entity)->next;
-
-        number_of_entities++;
-        if (number_of_entities > 10) // max entities = 10
-            break;
-        ent_array_obj = ent_array_obj->next;
-    }
-
-    SDL_Log("App entities deserialized with %i entities in %i ms.",
-            --number_of_entities, (int)(SDL_GetTicks64() - now));
-
-    SDL_free(json);
-
-    return entity_templates;
-}
-
 static struct tool tool_init(enum tool_type tool_type, SDL_Texture *texture,
                              int r, int g, int b)
 {
@@ -153,10 +64,18 @@ int app_init(struct app *app, SDL_Renderer *renderer)
     }
     SDL_Log("Map allocated memory: %i kB", (int)sizeof *app->map / 1024);
 
-    app->entity_templates =
-        deserialize_entity_templates("../assets/entity_templates.json");
+    // LOAD ENTITY TEMPLATES
+    SDL_Log("Attempting to deserialize entity templates...");
+    struct json_value_s *json =
+        json_from_file("../assets/entity_templates.json");
+    if (json == NULL) {
+        SDL_Log("Error parsing entitiy templates json.");
+        app_deinit(app);
+        return 0;
+    }
+    app->entity_templates = map_deserialize_entities(json);
     if (app->entity_templates == NULL) {
-        SDL_Log("Error deserializing app entities.");
+        SDL_Log("Error deserializing entity templates.");
         app_deinit(app);
         return 0;
     }

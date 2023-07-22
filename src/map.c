@@ -76,6 +76,96 @@ void map_destroy_entities(struct map_entity *entities)
     SDL_Log("Entities destroyed, memory freed: %zu bytes", mem);
 }
 
+struct map_entity *map_deserialize_entities(struct json_value_s *json)
+{
+    size_t mem = 0;
+    Uint32 now = SDL_GetTicks64();
+    // DESERIALIZE JSON STRING
+    // todo: json error handling
+    struct json_object_s *json_root = (struct json_object_s *)json->payload;
+    struct json_object_element_s *entities_object = json_root->start;
+    struct json_array_s *entities_array =
+        json_value_as_array(entities_object->value);
+
+    struct map_entity *entities = NULL;
+    struct map_entity **entity = &entities;
+
+    // LOOP THROUGH ENTITIES
+    int number_of_entities = 0;
+    struct json_array_element_s *ent_array_obj = entities_array->start;
+    for (size_t i = 0; i < entities_array->length; i++) {
+        struct json_object_s *ent_obj =
+            (struct json_object_s *)ent_array_obj->value->payload;
+
+        // LOOP THROUGH ENTITY ITEMS
+        int number_of_items = 0;
+        struct json_object_element_s *ent_item = ent_obj->start;
+
+        *entity = SDL_malloc(sizeof(struct map_entity));
+        mem += sizeof(**entity);
+        (*entity)->next = NULL;
+        struct map_entity_item **item = &(*entity)->item;
+
+        while (ent_item != NULL) {
+            *item = SDL_malloc(sizeof(struct map_entity_item));
+            mem += sizeof(**item);
+            (*item)->next = NULL;
+            SDL_snprintf((*item)->name, sizeof((*item)->name), "%s",
+                         ent_item->name->string);
+
+            switch (ent_item->value->type) {
+
+            case json_type_string: {
+                struct json_string_s *value_string =
+                    json_value_as_string(ent_item->value);
+                const char *value = value_string->string;
+                (*item)->type = STRING;
+                SDL_snprintf((*item)->value.string,
+                             sizeof((*item)->value.string), "%s", value);
+            } break;
+
+            case json_type_number: {
+                struct json_number_s *value_number =
+                    json_value_as_number(ent_item->value);
+                int value = SDL_strtol(value_number->number, NULL, 10);
+                (*item)->type = NUMBER;
+                (*item)->value.number = value;
+            } break;
+
+            default:
+                SDL_Log("json value type not supported: %zu [name=%s]",
+                        ent_item->value->type, ent_item->name->string);
+                return NULL;
+            }
+
+            item = &(*item)->next;
+
+            number_of_items++;
+            if (number_of_items >= 10) { // max entity items = 10
+                SDL_Log("Error: max number of map entity items reached.");
+                return NULL;
+            }
+            ent_item = ent_item->next;
+        }
+
+        entity = &(*entity)->next;
+
+        number_of_entities++;
+        if (number_of_entities >= 10) { // max entities = 10
+            SDL_Log("Error: max number of entities reached.");
+            return NULL;
+        }
+        ent_array_obj = ent_array_obj->next;
+    }
+
+    SDL_Log("Entities deserialized with %i entities in %i ms with %zu bytes.",
+            number_of_entities, (int)(SDL_GetTicks64() - now), mem);
+
+    SDL_free(json);
+
+    return entities;
+}
+
 int map_serialize(struct map *map, const char *path)
 {
     Uint32 now = SDL_GetTicks64();

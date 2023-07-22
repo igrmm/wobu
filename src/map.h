@@ -2,6 +2,7 @@
 #define MAP_H
 
 #include "SDL.h"
+#include "external/json.h"
 
 #define TILES_MAX 100
 #define ENTITY_STR_BUFSIZ 24
@@ -35,6 +36,7 @@ struct map {
 struct map *map_create(void);
 void map_reset_tiles(struct map *map);
 void map_destroy_entities(struct map_entity *entities);
+struct map_entity *map_deserialize_entities(struct json_value_s *json);
 int map_serialize(struct map *map, const char *path);
 int map_deserialize(struct map *map, const char *path);
 
