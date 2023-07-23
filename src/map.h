@@ -34,6 +34,7 @@ struct map {
 };
 
 struct map *map_create(void);
+struct map_entity *map_create_entity(struct map_entity *entity_template);
 void map_reset_tiles(struct map *map);
 void map_destroy_entities(struct map_entity *entities);
 struct map_entity *map_deserialize_entities(struct json_value_s *json);
