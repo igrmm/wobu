@@ -27,6 +27,39 @@ struct map *map_create(void)
     return map;
 }
 
+void map_print_entity(struct map_entity *entity)
+{
+    if (entity == NULL) {
+        return;
+    }
+
+    if (entity->item == NULL) {
+        return;
+    }
+
+    SDL_Log("------- PRINTING ENTITY -------");
+
+    struct map_entity_item *item = entity->item;
+    while (item != NULL) {
+        SDL_Log("NAME: %s", item->name);
+
+        switch (item->type) {
+
+        case NUMBER:
+            SDL_Log("VALUE: %i", item->value.number);
+            break;
+        case STRING:
+            SDL_Log("VALUE: %s", item->value.string);
+            break;
+        default:
+            SDL_Log("Map entity item type not supported.");
+            return;
+        }
+
+        item = item->next;
+    }
+}
+
 struct map_entity *map_create_entity(struct map_entity *entity_template)
 {
     if (entity_template == NULL) {
