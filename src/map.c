@@ -27,6 +27,59 @@ struct map *map_create(void)
     return map;
 }
 
+static int rect_get_or_set(int get, struct map_entity *entity, SDL_Rect *rect)
+{
+    if (entity == NULL || rect == NULL) {
+        return 0;
+    }
+
+    int x_set = 0, y_set = 0, w_set = 0, h_set = 0;
+    struct map_entity_item *item = entity->item;
+
+    while (item != NULL) {
+        if (SDL_strncmp(item->name, "rect_cmp_x", ENTITY_STR_BUFSIZ) == 0 &&
+            !x_set) {
+            get ? (rect->x = item->value.number)
+                : (item->value.number = rect->x);
+            x_set = 1;
+        }
+        if (SDL_strncmp(item->name, "rect_cmp_y", ENTITY_STR_BUFSIZ) == 0 &&
+            !y_set) {
+            get ? (rect->y = item->value.number)
+                : (item->value.number = rect->y);
+            y_set = 1;
+        }
+        if (SDL_strncmp(item->name, "rect_cmp_w", ENTITY_STR_BUFSIZ) == 0 &&
+            !w_set) {
+            get ? (rect->w = item->value.number)
+                : (item->value.number = rect->w);
+            w_set = 1;
+        }
+        if (SDL_strncmp(item->name, "rect_cmp_h", ENTITY_STR_BUFSIZ) == 0 &&
+            !h_set) {
+            get ? (rect->h = item->value.number)
+                : (item->value.number = rect->h);
+            h_set = 1;
+        }
+        if (x_set && y_set && w_set && h_set) {
+            break;
+        }
+        item = item->next;
+    }
+
+    return x_set && y_set && w_set && h_set;
+}
+
+int map_entity_get_rect(struct map_entity *entity, SDL_Rect *rect)
+{
+    return rect_get_or_set(1, entity, rect);
+}
+
+int map_entity_set_rect(struct map_entity *entity, SDL_Rect *rect)
+{
+    return rect_get_or_set(0, entity, rect);
+}
+
 void map_print_entity(struct map_entity *entity)
 {
     if (entity == NULL) {
