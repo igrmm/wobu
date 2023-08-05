@@ -64,21 +64,7 @@ int app_init(struct app *app, SDL_Renderer *renderer)
     }
     SDL_Log("Map allocated memory: %i kB", (int)sizeof *app->map / 1024);
 
-    // LOAD ENTITY TEMPLATES
-    SDL_Log("Attempting to deserialize entity templates...");
-    struct json_value_s *json =
-        json_from_file("../assets/entity_templates.json");
-    if (json == NULL) {
-        SDL_Log("Error parsing entitiy templates json.");
-        app_deinit(app);
-        return 0;
-    }
-    app->entity_templates = map_deserialize_entities(json);
-    if (app->entity_templates == NULL) {
-        SDL_Log("Error deserializing entity templates.");
-        app_deinit(app);
-        return 0;
-    }
+    propertiesw_init(&app->propertiesw);
 
     // centralize bg
     SDL_GetRendererOutputSize(renderer, &app->screen_width,
@@ -136,11 +122,10 @@ void app_deinit(struct app *app)
     if (app->map != NULL)
         SDL_free(app->map);
 
-    if (app->entity_templates != NULL)
-        map_destroy_entities(app->entity_templates);
-
     if (app->selected_entities != NULL)
         map_destroy_entities(app->selected_entities);
+
+    propertiesw_deinit(&app->propertiesw);
 
     IMG_Quit();
 }
