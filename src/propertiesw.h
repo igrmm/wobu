@@ -12,6 +12,7 @@ struct propertiesw {
     struct map_entity *entity_templates[ENTITY_TEMPLATES_MAX];
     const char *entity_templates_names[ENTITY_TEMPLATES_MAX];
     int number_of_entity_templates;
+    int selected_entity_template;
 };
 
 struct app;

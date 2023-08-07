@@ -72,6 +72,7 @@ int app_init(struct app *app, SDL_Renderer *renderer)
     reset_pan_and_zoom(app);
 
     app->selected_entities = NULL;
+    app->propertiesw.selected_entity_template = -1;
     app->modelw.current_tool = &app->modelw.tools[PENCIL];
     app->tileset_texture = tileset_texture;
     app->tileset_selected = nk_vec2(-1, -1);
