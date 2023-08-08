@@ -16,5 +16,10 @@
     {                                                                          \
         128, 0, 0, 255                                                         \
     }
+#define WHITE                                                                  \
+    (struct nk_color)                                                          \
+    {                                                                          \
+        255, 255, 255, 255                                                     \
+    }
 
 #endif
