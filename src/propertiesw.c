@@ -95,9 +95,12 @@ static int show_entity(struct nk_context *ctx, struct propertiesw *propertiesw,
                                     nk_vec2i(150, 150));
 
             if (propertiesw->selected_entity_template != selected) {
+                SDL_Rect rect = {0};
+                map_entity_get_rect(*entity, &rect);
                 map_destroy_entities((*entity));
                 *entity =
                     map_create_entity(propertiesw->entity_templates[selected]);
+                map_entity_set_rect(*entity, &rect);
             }
             propertiesw->selected_entity_template = selected;
 
