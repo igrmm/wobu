@@ -1,6 +1,8 @@
 #include "SDL.h"
 
 #include "app.h"
+#include "colors.h"
+#include "map.h"
 #include "modelw.h"
 
 static SDL_FPoint offset;
@@ -406,6 +408,19 @@ void model_window_render(SDL_Renderer *renderer, struct app *app)
             SDL_RenderDrawLineF(renderer, row0_screen.x, row0_screen.y,
                                 row1_screen.x, row1_screen.y);
         }
+    }
+
+    struct map_entity *entity = app->selected_entities;
+    SDL_FRect screen_rect = {0}, model_rect = {0};
+    SDL_Rect entity_rect = {0};
+    while (entity != NULL) {
+        map_entity_get_rect(entity, &entity_rect);
+        model_rect.x = entity_rect.x, model_rect.y = entity_rect.y,
+        model_rect.w = entity_rect.w, model_rect.h = entity_rect.h;
+        rect_model_to_screen(model_rect, &screen_rect);
+        SDL_SetRenderDrawColor(renderer, WHITE.r, WHITE.g, WHITE.b, WHITE.a);
+        SDL_RenderDrawRectF(renderer, &screen_rect);
+        entity = entity->next;
     }
 
     if (app->modelw.tool_rect.rect.w > 0 || app->modelw.tool_rect.rect.h > 0) {
