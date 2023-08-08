@@ -66,10 +66,14 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
             if (evt.type == SDL_QUIT)
                 goto cleanup;
 
-            nk_sdl_handle_event(&evt);
-
-            if (!nk_item_is_any_active(ctx))
+            if (nk_item_is_any_active(ctx)) {
+                nk_sdl_handle_event(&evt);
+            } else {
+                if (evt.type != SDL_MOUSEWHEEL) {
+                    nk_sdl_handle_event(&evt);
+                }
                 app_handle_event(&app, &evt);
+            }
         }
         nk_input_end(ctx);
 
