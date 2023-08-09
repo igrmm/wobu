@@ -4,7 +4,7 @@
 #include "SDL.h"
 #include "nk.h"
 
-enum tool_type { PENCIL, ERASER, NUMBER_OF_TOOLS };
+enum tool_type { PENCIL, ERASER, ENTITY, NUMBER_OF_TOOLS };
 
 struct tool {
     enum tool_type type;
