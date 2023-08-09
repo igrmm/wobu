@@ -31,6 +31,7 @@ struct map {
     int size;
     int tile_size;
     SDL_Point tiles[TILES_MAX][TILES_MAX];
+    struct map_entity *entities;
 };
 
 struct map *map_create(void);
