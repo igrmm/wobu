@@ -136,6 +136,9 @@ void app_deinit(struct app *app)
     if (app->tileset_texture != NULL)
         SDL_DestroyTexture(app->tileset_texture);
 
+    if (app->map->entities != NULL)
+        map_destroy_entities(app->map->entities);
+
     if (app->map != NULL)
         SDL_free(app->map);
 
