@@ -9,7 +9,7 @@ int tools_window(struct app *app, struct nk_context *ctx, const int flags)
         int btn_size = 35;
         struct nk_color color_bkp = ctx->style.button.border_color;
 
-        nk_layout_row_static(ctx, btn_size, btn_size, 3);
+        nk_layout_row_static(ctx, btn_size, btn_size, 4);
 
         // PENCIL TOOL
         if (app->modelw.current_tool->type == PENCIL)
@@ -33,6 +33,14 @@ int tools_window(struct app *app, struct nk_context *ctx, const int flags)
         if (nk_button_image(ctx,
                             nk_image_ptr(app->modelw.tools[ENTITY].texture)))
             app->modelw.current_tool = &app->modelw.tools[ENTITY];
+        ctx->style.button.border_color = color_bkp;
+
+        // SELECT TOOL
+        if (app->modelw.current_tool->type == SELECT)
+            ctx->style.button.border_color = RED;
+        if (nk_button_image(ctx,
+                            nk_image_ptr(app->modelw.tools[SELECT].texture)))
+            app->modelw.current_tool = &app->modelw.tools[SELECT];
         ctx->style.button.border_color = color_bkp;
 
     } else {

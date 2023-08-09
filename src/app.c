@@ -62,6 +62,14 @@ int app_init(struct app *app, SDL_Renderer *renderer)
     }
     app->modelw.tools[ENTITY] = tool_init(ENTITY, entity_texture, 255, 0, 0);
 
+    SDL_Texture *select_texture =
+        IMG_LoadTexture(renderer, "../assets/select.png");
+    if (select_texture == NULL) {
+        SDL_Log("SDL error in select_texture creation: %s", SDL_GetError());
+        return 0;
+    }
+    app->modelw.tools[SELECT] = tool_init(SELECT, select_texture, 255, 0, 0);
+
     reset_tool_rect(&app->modelw.tool_rect);
 
     app->map = map_create();
