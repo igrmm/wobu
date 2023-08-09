@@ -70,6 +70,15 @@ static int rect_get_or_set(int get, struct map_entity *entity, SDL_Rect *rect)
     return x_set && y_set && w_set && h_set;
 }
 
+int map_entity_get_frect(struct map_entity *entity, SDL_FRect *frect)
+{
+    SDL_Rect rect = {0};
+    int ret = rect_get_or_set(1, entity, &rect);
+    frect->x = rect.x, frect->y = rect.y, frect->w = rect.w, frect->h = rect.h;
+
+    return ret;
+}
+
 int map_entity_get_rect(struct map_entity *entity, SDL_Rect *rect)
 {
     return rect_get_or_set(1, entity, rect);
