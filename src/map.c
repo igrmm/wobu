@@ -200,29 +200,68 @@ static int map_jstr_cat(char *map_jstr, const char *fmt, ...)
     return 1;
 }
 
+size_t map_destroy_entity(struct map_entity *entity)
+{
+    size_t mem = 0;
+    struct map_entity_item *item = entity->item;
+    struct map_entity_item *next_item;
+    while (item != NULL) {
+        next_item = item->next;
+        mem += sizeof(*item);
+        SDL_free(item);
+        item = next_item;
+    }
+    mem += sizeof(*entity);
+    SDL_free(entity);
+    return mem;
+}
+
 void map_destroy_entities(struct map_entity *entities)
 {
     size_t mem = 0;
-    // LOOP THROUGH ENTITIES
     struct map_entity *entity = entities;
+    struct map_entity *next_entity;
     while (entity != NULL) {
-
-        // LOOP THROUGH ITEMS OF CURRENT ENTITY AND DESTROY
-        struct map_entity_item *item = entity->item;
-        while (item != NULL) {
-            struct map_entity_item *next_item = item->next;
-            mem += sizeof(*item);
-            SDL_free(item);
-            item = next_item;
-        }
-
-        // DESTROY CURRENT ENTITY
-        struct map_entity *next_entity = entity->next;
-        mem += sizeof(*entity);
-        SDL_free(entity);
+        next_entity = entity->next;
+        mem += map_destroy_entity(entity);
         entity = next_entity;
     }
     SDL_Log("Entities destroyed, memory freed: %zu bytes", mem);
+}
+
+void map_entities_add(struct map_entity *entity, struct map_entities *entities)
+{
+    if (entities->head == NULL) {
+        entities->head = entity;
+    }
+
+    if (entities->tail != NULL) {
+        entities->tail->next = entity;
+        entity->prev = entities->tail;
+    }
+
+    entities->tail = entity;
+}
+
+void map_entities_remove(struct map_entity *entity,
+                         struct map_entities *entities)
+{
+    if (entities->tail == entity && entities->head != entity) {
+        entity->prev->next = NULL;
+        entities->tail = entities->tail->prev;
+    }
+
+    if (entities->head == entity && entities->tail != entity) {
+        entity->next->prev = NULL;
+        entities->head = entities->head->next;
+    }
+
+    if (entity->next != NULL && entity->prev != NULL) {
+        entity->prev->next = entity->next;
+        entity->next->prev = entity->prev;
+    }
+
+    map_destroy_entity(entity);
 }
 
 struct map_entity *map_deserialize_entities(struct json_value_s *json,
