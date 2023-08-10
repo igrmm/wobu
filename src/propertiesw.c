@@ -31,7 +31,7 @@ int propertiesw_init(struct propertiesw *propertiesw)
         SDL_Log("Error parsing entitiy templates json.");
         return 0;
     }
-    propertiesw->entity_templates[0] = map_deserialize_entities(json);
+    propertiesw->entity_templates[0] = map_deserialize_entities(json, NULL);
     if (propertiesw->entity_templates[0] == NULL) {
         SDL_Log("Error deserializing entity templates.");
         return 0;

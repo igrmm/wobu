@@ -23,6 +23,7 @@ struct map *map_create(void)
     map->size = 20;
 
     map_reset_tiles(map);
+    map->entities.head = map->entities.tail = NULL;
 
     return map;
 }
@@ -224,7 +225,8 @@ void map_destroy_entities(struct map_entity *entities)
     SDL_Log("Entities destroyed, memory freed: %zu bytes", mem);
 }
 
-struct map_entity *map_deserialize_entities(struct json_value_s *json)
+struct map_entity *map_deserialize_entities(struct json_value_s *json,
+                                            struct map_entity **tail)
 {
     size_t mem = 0;
     Uint32 now = SDL_GetTicks64();
@@ -235,7 +237,7 @@ struct map_entity *map_deserialize_entities(struct json_value_s *json)
     struct json_array_s *entities_array =
         json_value_as_array(entities_object->value);
 
-    struct map_entity *entities = NULL;
+    struct map_entity *entities = NULL, *prev = NULL;
     struct map_entity **entity = &entities;
 
     // LOOP THROUGH ENTITIES
@@ -252,6 +254,7 @@ struct map_entity *map_deserialize_entities(struct json_value_s *json)
         *entity = SDL_malloc(sizeof(struct map_entity));
         mem += sizeof(**entity);
         (*entity)->next = NULL;
+        (*entity)->prev = prev;
         struct map_entity_item **item = &(*entity)->item;
 
         while (ent_item != NULL) {
@@ -296,6 +299,7 @@ struct map_entity *map_deserialize_entities(struct json_value_s *json)
             ent_item = ent_item->next;
         }
 
+        prev = *entity;
         entity = &(*entity)->next;
 
         number_of_entities++;
@@ -304,6 +308,10 @@ struct map_entity *map_deserialize_entities(struct json_value_s *json)
             return NULL;
         }
         ent_array_obj = ent_array_obj->next;
+    }
+
+    if (tail != NULL) {
+        *tail = prev;
     }
 
     SDL_Log("Entities deserialized with %i entities in %i ms with %zu bytes.",
