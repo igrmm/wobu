@@ -14,7 +14,7 @@ struct app {
     SDL_Texture *tileset_texture;
     struct nk_vec2 tileset_selected;
     struct map *map;
-    struct map_entity *selected_entities;
+    struct map_entity **selected_entities;
     struct modelw modelw;
     struct propertiesw propertiesw;
     struct fps_counter fps_counter;

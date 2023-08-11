@@ -141,7 +141,7 @@ int properties_window(struct app *app, struct nk_context *ctx, const int flags)
 {
     if (nk_begin(ctx, "properties", nk_rect(20, 365, 200, 200), flags)) {
         if (app->selected_entities != NULL) {
-            show_entity(ctx, &app->propertiesw, &app->selected_entities);
+            show_entity(ctx, &app->propertiesw, app->selected_entities);
         } else {
             nk_layout_row_dynamic(ctx, 25, 1);
             nk_label(ctx, "no selection", NK_TEXT_LEFT);

@@ -429,7 +429,9 @@ void model_window_render(SDL_Renderer *renderer, struct app *app)
     }
 
     // render selected entities
-    entity = app->selected_entities;
+    if (app->selected_entities != NULL) {
+        entity = *app->selected_entities;
+    }
     while (entity != NULL) {
         map_entity_get_rect(entity, &entity_rect);
         model_rect.x = entity_rect.x, model_rect.y = entity_rect.y,

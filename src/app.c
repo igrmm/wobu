@@ -142,9 +142,6 @@ void app_deinit(struct app *app)
     if (app->map != NULL)
         SDL_free(app->map);
 
-    if (app->selected_entities != NULL)
-        map_destroy_entities(app->selected_entities);
-
     propertiesw_deinit(&app->propertiesw);
 
     IMG_Quit();
