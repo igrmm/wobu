@@ -37,6 +37,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
         SDL_DestroyWindow(win);
         exit(EXIT_FAILURE);
     }
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
     ctx = nk_sdl_init(win, renderer);
     {

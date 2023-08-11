@@ -435,8 +435,8 @@ void model_window_render(SDL_Renderer *renderer, struct app *app)
         model_rect.x = entity_rect.x, model_rect.y = entity_rect.y,
         model_rect.w = entity_rect.w, model_rect.h = entity_rect.h;
         rect_model_to_screen(model_rect, &screen_rect);
-        SDL_SetRenderDrawColor(renderer, WHITE.r, WHITE.g, WHITE.b, WHITE.a);
-        SDL_RenderDrawRectF(renderer, &screen_rect);
+        SDL_SetRenderDrawColor(renderer, RED.r, RED.g, RED.b, 70);
+        SDL_RenderFillRectF(renderer, &screen_rect);
         entity = entity->next;
     }
 
