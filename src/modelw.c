@@ -351,6 +351,7 @@ void model_window_render(SDL_Renderer *renderer, struct app *app)
 {
     SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
 
+    // render tiles
     int tile_size = app->map->tile_size;
     int map_size = app->map->size;
     SDL_Rect src_rect = {-1, -1, tile_size, tile_size};
@@ -378,6 +379,7 @@ void model_window_render(SDL_Renderer *renderer, struct app *app)
         }
     }
 
+    // render grid
     if (app->show_grid) {
         int cols = map_size;
         SDL_FPoint col0_model, col0_screen, col1_model, col1_screen;
@@ -410,9 +412,12 @@ void model_window_render(SDL_Renderer *renderer, struct app *app)
         }
     }
 
-    struct map_entity *entity = app->selected_entities;
+    struct map_entity *entity = NULL;
     SDL_FRect screen_rect = {0}, model_rect = {0};
     SDL_Rect entity_rect = {0};
+
+    // render entities
+    entity = app->map->entities.head;
     while (entity != NULL) {
         map_entity_get_rect(entity, &entity_rect);
         model_rect.x = entity_rect.x, model_rect.y = entity_rect.y,
@@ -423,6 +428,19 @@ void model_window_render(SDL_Renderer *renderer, struct app *app)
         entity = entity->next;
     }
 
+    // render selected entities
+    entity = app->selected_entities;
+    while (entity != NULL) {
+        map_entity_get_rect(entity, &entity_rect);
+        model_rect.x = entity_rect.x, model_rect.y = entity_rect.y,
+        model_rect.w = entity_rect.w, model_rect.h = entity_rect.h;
+        rect_model_to_screen(model_rect, &screen_rect);
+        SDL_SetRenderDrawColor(renderer, WHITE.r, WHITE.g, WHITE.b, WHITE.a);
+        SDL_RenderDrawRectF(renderer, &screen_rect);
+        entity = entity->next;
+    }
+
+    // render tool rect
     if (app->modelw.tool_rect.rect.w > 0 || app->modelw.tool_rect.rect.h > 0) {
         SDL_Color c = app->modelw.current_tool->rect_color;
         SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
