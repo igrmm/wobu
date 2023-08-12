@@ -200,7 +200,7 @@ static int map_jstr_cat(char *map_jstr, const char *fmt, ...)
     return 1;
 }
 
-size_t map_destroy_entity(struct map_entity *entity)
+size_t map_destroy_entity_items(struct map_entity *entity)
 {
     size_t mem = 0;
     struct map_entity_item *item = entity->item;
@@ -211,6 +211,12 @@ size_t map_destroy_entity(struct map_entity *entity)
         SDL_free(item);
         item = next_item;
     }
+    return mem;
+}
+
+size_t map_destroy_entity(struct map_entity *entity)
+{
+    size_t mem = map_destroy_entity_items(entity);
     mem += sizeof(*entity);
     SDL_free(entity);
     return mem;
