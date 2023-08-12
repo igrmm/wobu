@@ -128,40 +128,28 @@ void map_print_entity(struct map_entity *entity)
     SDL_Log("Memory allocated: %zu bytes", mem);
 }
 
-struct map_entity *map_create_entity(struct map_entity *entity_template)
+struct map_entity_item *
+map_create_entity_items(struct map_entity *entity_template)
 {
-    if (entity_template == NULL) {
-        return NULL;
-    }
-
-    if (entity_template->item == NULL) {
-        return NULL;
-    }
-
-    struct map_entity *entity = SDL_malloc(sizeof(struct map_entity));
-    entity->item = NULL;
-    entity->next = NULL;
-
-    struct map_entity_item **item = &entity->item;
+    struct map_entity_item *item = NULL;
     struct map_entity_item *item_template = entity_template->item;
 
     while (item_template != NULL) {
-        *item = SDL_malloc(sizeof(struct map_entity_item));
-        (*item)->next = NULL;
-        SDL_snprintf((*item)->name, sizeof((*item)->name), "%s",
-                     item_template->name);
+        item = SDL_malloc(sizeof(struct map_entity_item));
+        item->next = NULL;
+        SDL_snprintf(item->name, sizeof(item->name), "%s", item_template->name);
 
         switch (item_template->type) {
 
         case NUMBER: {
-            (*item)->type = NUMBER;
-            (*item)->value.number = item_template->value.number;
+            item->type = NUMBER;
+            item->value.number = item_template->value.number;
         } break;
 
         case STRING: {
-            (*item)->type = STRING;
-            SDL_snprintf((*item)->value.string, sizeof((*item)->value.string),
-                         "%s", item_template->value.string);
+            item->type = STRING;
+            SDL_snprintf(item->value.string, sizeof(item->value.string), "%s",
+                         item_template->value.string);
         } break;
 
         default:
@@ -169,9 +157,19 @@ struct map_entity *map_create_entity(struct map_entity *entity_template)
             return NULL;
         }
 
-        item = &(*item)->next;
+        item = item->next;
         item_template = item_template->next;
     }
+
+    return item;
+}
+
+struct map_entity *map_create_entity(struct map_entity *entity_template)
+{
+    struct map_entity *entity = SDL_malloc(sizeof(struct map_entity));
+    entity->item = map_create_entity_items(entity_template);
+    entity->next = NULL;
+    entity->prev = NULL;
 
     return entity;
 }

@@ -39,6 +39,8 @@ struct map {
 };
 
 struct map *map_create(void);
+struct map_entity_item *
+map_create_entity_items(struct map_entity *entity_template);
 struct map_entity *map_create_entity(struct map_entity *entity_template);
 int map_entity_get_rect(struct map_entity *entity, SDL_Rect *rect);
 int map_entity_get_frect(struct map_entity *entity, SDL_FRect *frect);
