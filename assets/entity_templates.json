@@ -1,6 +1,13 @@
 {
     "entities": [
         {
+            "type_cmp_type": "block",
+            "rect_cmp_x": 0,
+            "rect_cmp_y": 0,
+            "rect_cmp_w": 0,
+            "rect_cmp_h": 0
+        },
+        {
             "type_cmp_type": "waypoint",
             "rect_cmp_x": 0,
             "rect_cmp_y": 0,
@@ -8,13 +15,6 @@
             "rect_cmp_h": 0,
             "waypoint_cmp_waypoint": "start",
             "waypoint_cmp_map": "start"
-        },
-        {
-            "type_cmp_type": "block",
-            "rect_cmp_x": 0,
-            "rect_cmp_y": 0,
-            "rect_cmp_w": 0,
-            "rect_cmp_h": 0
         }
     ]
 }
