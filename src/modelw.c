@@ -260,6 +260,31 @@ static void eraser_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
     }
 }
 
+static void entity_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
+                        Uint8 state, struct app *app)
+{
+    if (button == SDL_BUTTON_RIGHT && state == SDL_PRESSED) {
+        make_tile_shaped_tool_rect(&app->modelw.tool_rect, mouse_screen_coord,
+                                   app);
+        return;
+    }
+
+    if (button == SDL_BUTTON_RIGHT && state == SDL_RELEASED) {
+        if (!SDL_FRectEmpty(&app->modelw.tool_rect.rect)) {
+            SDL_Rect entity_rect = {
+                app->modelw.tool_rect.rect.x, app->modelw.tool_rect.rect.y,
+                app->modelw.tool_rect.rect.w, app->modelw.tool_rect.rect.h};
+            struct map_entity *entity =
+                map_create_entity(app->propertiesw.entity_templates[0]);
+            map_entity_set_rect(entity, &entity_rect);
+            map_entities_add(entity, &app->map->entities);
+            app->selected_entities = entity;
+        }
+        reset_tool_rect(&app->modelw.tool_rect);
+        return;
+    }
+}
+
 static void tool_update(SDL_FPoint mouse_screen_coord, Uint8 button,
                         Uint8 state, struct app *app)
 {
@@ -271,6 +296,10 @@ static void tool_update(SDL_FPoint mouse_screen_coord, Uint8 button,
 
     case ERASER:
         eraser_tool(mouse_screen_coord, button, state, app);
+        break;
+
+    case ENTITY:
+        entity_tool(mouse_screen_coord, button, state, app);
         break;
 
     default:
