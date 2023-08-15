@@ -68,11 +68,11 @@ void propertiesw_deinit(struct propertiesw *propertiesw)
 }
 
 static int show_entity(struct nk_context *ctx, struct propertiesw *propertiesw,
-                       struct map_entity **entity)
+                       struct map_entity *entity)
 {
     // get current type of entity
     if (propertiesw->selected_entity_template < 0) {
-        const char *entity_type = get_type_cmp_value((*entity)->item);
+        const char *entity_type = get_type_cmp_value(entity->item);
         for (int i = 0; i < propertiesw->number_of_entity_templates; i++) {
             if (SDL_strncmp(entity_type, propertiesw->entity_templates_names[i],
                             ENTITY_STR_BUFSIZ) == 0) {
@@ -83,7 +83,7 @@ static int show_entity(struct nk_context *ctx, struct propertiesw *propertiesw,
     }
 
     nk_layout_row_dynamic(ctx, 25, 2);
-    struct map_entity_item *item = (*entity)->item;
+    struct map_entity_item *item = entity->item;
     while (item != NULL) {
         nk_label(ctx, item->name, NK_TEXT_LEFT);
 
@@ -96,11 +96,11 @@ static int show_entity(struct nk_context *ctx, struct propertiesw *propertiesw,
 
             if (propertiesw->selected_entity_template != selected) {
                 SDL_Rect rect = {0};
-                map_entity_get_rect(*entity, &rect);
-                map_destroy_entity((*entity));
-                *entity =
-                    map_create_entity(propertiesw->entity_templates[selected]);
-                map_entity_set_rect(*entity, &rect);
+                map_entity_get_rect(entity, &rect);
+                map_destroy_entity_items(entity);
+                entity->item = map_create_entity_items(
+                    propertiesw->entity_templates[selected]);
+                map_entity_set_rect(entity, &rect);
             }
             propertiesw->selected_entity_template = selected;
 
