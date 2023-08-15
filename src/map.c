@@ -131,25 +131,27 @@ void map_print_entity(struct map_entity *entity)
 struct map_entity_item *
 map_create_entity_items(struct map_entity *entity_template)
 {
-    struct map_entity_item *item = NULL;
+    struct map_entity_item *items = NULL;
+    struct map_entity_item **item = &items;
     struct map_entity_item *item_template = entity_template->item;
 
     while (item_template != NULL) {
-        item = SDL_malloc(sizeof(struct map_entity_item));
-        item->next = NULL;
-        SDL_snprintf(item->name, sizeof(item->name), "%s", item_template->name);
+        *item = SDL_malloc(sizeof(struct map_entity_item));
+        (*item)->next = NULL;
+        SDL_snprintf((*item)->name, sizeof((*item)->name), "%s",
+                     item_template->name);
 
         switch (item_template->type) {
 
         case NUMBER: {
-            item->type = NUMBER;
-            item->value.number = item_template->value.number;
+            (*item)->type = NUMBER;
+            (*item)->value.number = item_template->value.number;
         } break;
 
         case STRING: {
-            item->type = STRING;
-            SDL_snprintf(item->value.string, sizeof(item->value.string), "%s",
-                         item_template->value.string);
+            (*item)->type = STRING;
+            SDL_snprintf((*item)->value.string, sizeof((*item)->value.string),
+                         "%s", item_template->value.string);
         } break;
 
         default:
@@ -157,11 +159,11 @@ map_create_entity_items(struct map_entity *entity_template)
             return NULL;
         }
 
-        item = item->next;
+        item = &(*item)->next;
         item_template = item_template->next;
     }
 
-    return item;
+    return items;
 }
 
 struct map_entity *map_create_entity(struct map_entity *entity_template)
