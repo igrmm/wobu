@@ -285,6 +285,31 @@ static void entity_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
     }
 }
 
+static void select_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
+                        Uint8 state, struct app *app)
+{
+    if (button == SDL_BUTTON_LEFT) {
+        SDL_FPoint mouse;
+        screen_to_model(mouse_screen_coord, &mouse);
+
+        int map_size_px = app->map->size * app->map->tile_size;
+        SDL_FRect grid_rect = {0, 0, map_size_px, map_size_px};
+        SDL_FRect entity_rect = {0};
+
+        if (SDL_PointInFRect(&mouse, &grid_rect)) {
+            struct map_entity *entity = app->map->entities.head;
+            while (entity != NULL) {
+                map_entity_get_frect(entity, &entity_rect);
+                if (SDL_PointInFRect(&mouse, &entity_rect)) {
+                    app->selected_entities = entity;
+                    return;
+                }
+                entity = entity->next;
+            }
+        }
+    }
+}
+
 static void tool_update(SDL_FPoint mouse_screen_coord, Uint8 button,
                         Uint8 state, struct app *app)
 {
@@ -300,6 +325,10 @@ static void tool_update(SDL_FPoint mouse_screen_coord, Uint8 button,
 
     case ENTITY:
         entity_tool(mouse_screen_coord, button, state, app);
+        break;
+
+    case SELECT:
+        select_tool(mouse_screen_coord, button, state, app);
         break;
 
     default:
