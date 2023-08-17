@@ -87,7 +87,7 @@ int app_init(struct app *app, SDL_Renderer *renderer)
                               &app->screen_height);
     reset_pan_and_zoom(app);
 
-    app->selected_entities = NULL;
+    app->selection = (struct map_entity_group){0};
     app->propertiesw.selected_entity_template = -1;
     app->modelw.current_tool = &app->modelw.tools[PENCIL];
     app->tileset_texture = tileset_texture;

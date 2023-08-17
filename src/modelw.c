@@ -278,7 +278,9 @@ static void entity_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
                 map_create_entity(app->propertiesw.entity_templates[0]);
             map_entity_set_rect(entity, &entity_rect);
             map_entities_add(entity, &app->map->entities);
-            app->selected_entities = entity;
+            app->selection.entities[0] = entity;
+            app->selection.count = 1;
+            app->propertiesw.selected_entity_template = -1;
         }
         reset_tool_rect(&app->modelw.tool_rect);
         return;
@@ -301,7 +303,9 @@ static void select_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
             while (entity != NULL) {
                 map_entity_get_frect(entity, &entity_rect);
                 if (SDL_PointInFRect(&mouse, &entity_rect)) {
-                    app->selected_entities = entity;
+                    app->selection.entities[0] = entity;
+                    app->selection.count = 1;
+                    app->propertiesw.selected_entity_template = -1;
                     return;
                 }
                 entity = entity->next;
@@ -487,17 +491,16 @@ void model_window_render(SDL_Renderer *renderer, struct app *app)
     }
 
     // render selected entities
-    if (app->selected_entities != NULL) {
-        entity = app->selected_entities;
-    }
-    while (entity != NULL) {
-        map_entity_get_rect(entity, &entity_rect);
-        model_rect.x = entity_rect.x, model_rect.y = entity_rect.y,
-        model_rect.w = entity_rect.w, model_rect.h = entity_rect.h;
-        rect_model_to_screen(model_rect, &screen_rect);
-        SDL_SetRenderDrawColor(renderer, RED.r, RED.g, RED.b, 70);
-        SDL_RenderFillRectF(renderer, &screen_rect);
-        entity = entity->next;
+    for (int i = 0; i < app->selection.count; i++) {
+        if (app->selection.entities[i] != NULL) {
+            entity = app->selection.entities[i];
+            map_entity_get_rect(entity, &entity_rect);
+            model_rect.x = entity_rect.x, model_rect.y = entity_rect.y,
+            model_rect.w = entity_rect.w, model_rect.h = entity_rect.h;
+            rect_model_to_screen(model_rect, &screen_rect);
+            SDL_SetRenderDrawColor(renderer, RED.r, RED.g, RED.b, 70);
+            SDL_RenderFillRectF(renderer, &screen_rect);
+        }
     }
 
     // render tool rect
