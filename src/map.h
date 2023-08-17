@@ -6,6 +6,7 @@
 
 #define TILES_MAX 100
 #define ENTITY_STR_BUFSIZ 24
+#define ENTITY_GROUP_MAX 100
 
 enum map_entity_type { NUMBER, STRING, BOOL };
 
@@ -25,6 +26,12 @@ struct map_entity_item {
 struct map_entity {
     struct map_entity_item *item;
     struct map_entity *prev, *next;
+};
+
+struct map_entity_group {
+    struct map_entity *entities[ENTITY_GROUP_MAX];
+    const char *ids[ENTITY_GROUP_MAX];
+    int count;
 };
 
 struct map_entities {
