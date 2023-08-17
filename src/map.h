@@ -24,6 +24,7 @@ struct map_entity_item {
 };
 
 struct map_entity {
+    int id;
     struct map_entity_item *item;
     struct map_entity *prev, *next;
 };
@@ -45,6 +46,7 @@ struct map {
     struct map_entities entities;
 };
 
+int map_make_id(void);
 struct map *map_create(void);
 struct map_entity_item *
 map_create_entity_items(struct map_entity *entity_template);

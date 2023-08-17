@@ -4,6 +4,8 @@
 #include "jsonffile.h"
 #include "map.h"
 
+static int id;
+
 void map_reset_tiles(struct map *map)
 {
     for (int i = 0; i < TILES_MAX; i++) {
@@ -12,6 +14,8 @@ void map_reset_tiles(struct map *map)
         }
     }
 }
+
+int map_make_id(void) { return ++id; }
 
 struct map *map_create(void)
 {
