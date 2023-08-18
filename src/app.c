@@ -30,6 +30,58 @@ static struct tool tool_init(enum tool_type tool_type, SDL_Texture *texture,
     return tool;
 }
 
+char *app_get_entity_type(struct map_entity_item *item)
+{
+    size_t name_size = 0;
+    while (item != NULL) {
+        if (item->type == STRING) {
+            name_size = SDL_arraysize(item->name);
+            if (SDL_strncmp(item->name, ENTITY_TYPE_TAG, name_size) == 0) {
+                return item->value.string;
+            }
+        }
+        item = item->next;
+    }
+    return 0;
+}
+
+static int app_template_init(struct map_entity_group *template)
+{
+    // LOAD ENTITY TEMPLATES
+    SDL_Log("Attempting to deserialize entity templates...");
+    struct json_value_s *json =
+        json_from_file("../assets/entity_templates.json");
+    if (json == NULL) {
+        SDL_Log("Error parsing entitiy templates json.");
+        return 0;
+    }
+    template->entities[0] = map_deserialize_entities(json, NULL);
+    if (template->entities[0] == NULL) {
+        SDL_Log("Error deserializing entity templates.");
+        return 0;
+    }
+
+    // NAME OF THE FIRST ENTITY TEMPLATE TYPE CMP
+    template->ids[0] = app_get_entity_type(template->entities[0]->item);
+
+    // LOOP THROUGH ENTITY TEMPLATES
+    struct map_entity *entity = template->entities[0]->next;
+    size_t entity_templates_max = SDL_arraysize(template->entities);
+    size_t i = 1;
+    for (; i < entity_templates_max; i++) {
+        if (entity != NULL) {
+            template->entities[i] = entity;
+            template->ids[i] = app_get_entity_type(entity->item);
+            entity = entity->next;
+        } else {
+            break;
+        }
+    }
+    template->count = i;
+
+    return 1;
+}
+
 int app_init(struct app *app, SDL_Renderer *renderer)
 {
     SDL_Texture *tileset_texture = IMG_LoadTexture(renderer, "tileset.png");
@@ -80,7 +132,7 @@ int app_init(struct app *app, SDL_Renderer *renderer)
     }
     SDL_Log("Map allocated memory: %i kB", (int)sizeof *app->map / 1024);
 
-    propertiesw_init(&app->propertiesw);
+    app_template_init(&app->template);
 
     // centralize bg
     SDL_GetRendererOutputSize(renderer, &app->screen_width,
@@ -88,7 +140,6 @@ int app_init(struct app *app, SDL_Renderer *renderer)
     reset_pan_and_zoom(app);
 
     app->selection = (struct map_entity_group){0};
-    app->propertiesw.selected_entity_template = -1;
     app->modelw.current_tool = &app->modelw.tools[PENCIL];
     app->tileset_texture = tileset_texture;
     app->tileset_selected = nk_vec2(-1, -1);
@@ -142,7 +193,8 @@ void app_deinit(struct app *app)
     if (app->map != NULL)
         SDL_free(app->map);
 
-    propertiesw_deinit(&app->propertiesw);
+    if (app->template.entities[0] != NULL)
+        map_destroy_entities(app->template.entities[0]);
 
     IMG_Quit();
 }

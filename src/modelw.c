@@ -275,12 +275,11 @@ static void entity_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
                 app->modelw.tool_rect.rect.x, app->modelw.tool_rect.rect.y,
                 app->modelw.tool_rect.rect.w, app->modelw.tool_rect.rect.h};
             struct map_entity *entity =
-                map_create_entity(app->propertiesw.entity_templates[0]);
+                map_create_entity(app->template.entities[0]);
             map_entity_set_rect(entity, &entity_rect);
             map_entities_add(entity, &app->map->entities);
             app->selection.entities[0] = entity;
             app->selection.count = 1;
-            app->propertiesw.selected_entity_template = -1;
         }
         reset_tool_rect(&app->modelw.tool_rect);
         return;
@@ -305,7 +304,6 @@ static void select_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
                 if (SDL_PointInFRect(&mouse, &entity_rect)) {
                     app->selection.entities[0] = entity;
                     app->selection.count = 1;
-                    app->propertiesw.selected_entity_template = -1;
                     return;
                 }
                 entity = entity->next;

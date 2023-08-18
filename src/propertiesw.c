@@ -6,77 +6,20 @@
 #include "map.h"
 #include "propertiesw.h"
 
-static char *get_type_cmp_value(struct map_entity_item *item)
-{
-    size_t name_size = 0;
-    while (item != NULL) {
-        if (item->type == STRING) {
-            name_size = SDL_arraysize(item->name);
-            if (SDL_strncmp(item->name, "type_cmp_type", name_size) == 0) {
-                return item->value.string;
-            }
-        }
-        item = item->next;
-    }
-    return 0;
-}
+static int current_selected_type = 0, current_entity_id = 0;
 
-int propertiesw_init(struct propertiesw *propertiesw)
-{
-    // LOAD ENTITY TEMPLATES
-    SDL_Log("Attempting to deserialize entity templates...");
-    struct json_value_s *json =
-        json_from_file("../assets/entity_templates.json");
-    if (json == NULL) {
-        SDL_Log("Error parsing entitiy templates json.");
-        return 0;
-    }
-    propertiesw->entity_templates[0] = map_deserialize_entities(json, NULL);
-    if (propertiesw->entity_templates[0] == NULL) {
-        SDL_Log("Error deserializing entity templates.");
-        return 0;
-    }
-
-    // NAME OF THE FIRST ENTITY TEMPLATE TYPE CMP
-    propertiesw->entity_templates_names[0] =
-        get_type_cmp_value(propertiesw->entity_templates[0]->item);
-
-    // LOOP THROUGH ENTITY TEMPLATES
-    struct map_entity *entity = propertiesw->entity_templates[0]->next;
-    size_t entity_templates_max = SDL_arraysize(propertiesw->entity_templates);
-    size_t i = 1;
-    for (; i < entity_templates_max; i++) {
-        if (entity != NULL) {
-            propertiesw->entity_templates[i] = entity;
-            propertiesw->entity_templates_names[i] =
-                get_type_cmp_value(entity->item);
-            entity = entity->next;
-        } else {
-            break;
-        }
-    }
-    propertiesw->number_of_entity_templates = i;
-
-    return 1;
-}
-
-void propertiesw_deinit(struct propertiesw *propertiesw)
-{
-    if (propertiesw->entity_templates[0] != NULL) {
-        map_destroy_entities(propertiesw->entity_templates[0]);
-    }
-}
-
-static int show_entity(struct nk_context *ctx, struct propertiesw *propertiesw,
+static int show_entity(struct nk_context *ctx,
+                       struct map_entity_group *template,
                        struct map_entity *entity)
 {
     // get current type of entity
-    if (propertiesw->selected_entity_template < 0) {
-        const char *entity_type = get_type_cmp_value(entity->item);
-        for (int i = 0; i < propertiesw->number_of_entity_templates; i++) {
-            if (SDL_strncmp(entity_type, propertiesw->entity_templates_names[i],
-                            ENTITY_STR_BUFSIZ) == 0) {
-                propertiesw->selected_entity_template = i;
+    if (current_entity_id != entity->id) {
+        const char *entity_type = app_get_entity_type(entity->item);
+        for (int i = 0; i < template->count; i++) {
+            if (SDL_strncmp(entity_type, template->ids[i], ENTITY_STR_BUFSIZ) ==
+                0) {
+                current_selected_type = i;
+                current_entity_id = entity->id;
                 break;
             }
         }
@@ -88,21 +31,20 @@ static int show_entity(struct nk_context *ctx, struct propertiesw *propertiesw,
         nk_label(ctx, item->name, NK_TEXT_LEFT);
 
         // show combobox with entity types
-        if (SDL_strncmp(item->name, "type_cmp_type", ENTITY_STR_BUFSIZ) == 0) {
-            int selected = nk_combo(ctx, propertiesw->entity_templates_names,
-                                    propertiesw->number_of_entity_templates,
-                                    propertiesw->selected_entity_template, 25,
-                                    nk_vec2i(150, 150));
+        if (SDL_strncmp(item->name, ENTITY_TYPE_TAG, ENTITY_STR_BUFSIZ) == 0) {
+            int new_selected_type =
+                nk_combo(ctx, template->ids, template->count,
+                         current_selected_type, 25, nk_vec2i(150, 150));
 
-            if (propertiesw->selected_entity_template != selected) {
+            if (current_selected_type != new_selected_type) {
                 SDL_Rect rect = {0};
                 map_entity_get_rect(entity, &rect);
                 map_destroy_entity_items(entity);
                 entity->item = map_create_entity_items(
-                    propertiesw->entity_templates[selected]);
+                    template->entities[new_selected_type]);
                 map_entity_set_rect(entity, &rect);
+                current_selected_type = new_selected_type;
             }
-            propertiesw->selected_entity_template = selected;
 
             // show other items
         } else {
@@ -141,7 +83,7 @@ int properties_window(struct app *app, struct nk_context *ctx, const int flags)
 {
     if (nk_begin(ctx, "properties", nk_rect(20, 365, 200, 200), flags)) {
         if (app->selection.entities[0] != NULL && app->selection.count == 1) {
-            show_entity(ctx, &app->propertiesw, app->selection.entities[0]);
+            show_entity(ctx, &app->template, app->selection.entities[0]);
         } else {
             nk_layout_row_dynamic(ctx, 25, 1);
             nk_label(ctx, "no selection", NK_TEXT_LEFT);
