@@ -12,6 +12,8 @@ static int show_entity(struct nk_context *ctx,
                        struct map_entity_group *template,
                        struct map_entity *entity)
 {
+    char buffer[ENTITY_STR_BUFSIZ];
+
     // get current type of entity
     if (current_entity_id != entity->id) {
         const char *entity_type = app_get_entity_type(entity->item);
@@ -26,6 +28,13 @@ static int show_entity(struct nk_context *ctx,
     }
 
     nk_layout_row_dynamic(ctx, 25, 2);
+
+    // show entity id
+    nk_label(ctx, "id", NK_TEXT_LEFT);
+    SDL_snprintf(buffer, SDL_arraysize(buffer), "%i", entity->id);
+    nk_edit_string_zero_terminated(ctx, NK_EDIT_READ_ONLY, buffer,
+                                   ENTITY_STR_BUFSIZ, nk_filter_decimal);
+
     struct map_entity_item *item = entity->item;
     while (item != NULL) {
         nk_label(ctx, item->name, NK_TEXT_LEFT);
@@ -51,7 +60,6 @@ static int show_entity(struct nk_context *ctx,
             switch (item->type) {
 
             case NUMBER: {
-                char buffer[ENTITY_STR_BUFSIZ];
                 SDL_snprintf(buffer, SDL_arraysize(buffer), "%i",
                              item->value.number);
                 nk_edit_string_zero_terminated(ctx, NK_EDIT_SIMPLE, buffer,
