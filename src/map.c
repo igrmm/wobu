@@ -174,6 +174,7 @@ struct map_entity *map_create_entity(struct map_entity *entity_template)
 {
     struct map_entity *entity = SDL_malloc(sizeof(struct map_entity));
     entity->item = map_create_entity_items(entity_template);
+    entity->id = map_make_id();
     entity->next = NULL;
     entity->prev = NULL;
 
