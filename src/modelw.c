@@ -414,7 +414,13 @@ static void evt_mouse_motion(SDL_MouseMotionEvent *evt, struct app *app)
 
 static void evt_key_up(SDL_KeyboardEvent *evt, struct app *app)
 {
-    if (evt->keysym.scancode == SDL_SCANCODE_DELETE) {
+    switch (evt->keysym.scancode) {
+
+    case SDL_SCANCODE_ESCAPE:
+        app->selection.count = 0;
+        break;
+
+    case SDL_SCANCODE_DELETE:
         for (int i = 0; i < app->selection.count; i++) {
             if (app->selection.entities[i] != NULL) {
                 map_entities_remove(app->selection.entities[i],
@@ -423,6 +429,10 @@ static void evt_key_up(SDL_KeyboardEvent *evt, struct app *app)
         }
         app->selection.entities[0] = NULL;
         app->selection.count = 0;
+        break;
+
+    default:
+        break;
     }
 }
 
