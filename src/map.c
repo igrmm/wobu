@@ -272,6 +272,10 @@ void map_entities_remove(struct map_entity *entity,
         entity->next->prev = entity->prev;
     }
 
+    if (entities->head == entity && entities->tail == entity) {
+        entities->head = entities->tail = NULL;
+    }
+
     map_destroy_entity(entity);
 }
 
