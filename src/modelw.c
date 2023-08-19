@@ -384,6 +384,20 @@ static void evt_mouse_motion(SDL_MouseMotionEvent *evt, struct app *app)
     }
 }
 
+static void evt_key_up(SDL_KeyboardEvent *evt, struct app *app)
+{
+    if (evt->keysym.scancode == SDL_SCANCODE_DELETE) {
+        for (int i = 0; i < app->selection.count; i++) {
+            if (app->selection.entities[i] != NULL) {
+                map_entities_remove(app->selection.entities[i],
+                                    &app->map->entities);
+            }
+        }
+        app->selection.entities[0] = NULL;
+        app->selection.count = 0;
+    }
+}
+
 void model_window_handle_event(SDL_Event *evt, struct app *app)
 {
     switch (evt->type) {
@@ -402,6 +416,10 @@ void model_window_handle_event(SDL_Event *evt, struct app *app)
 
     case SDL_MOUSEMOTION:
         evt_mouse_motion(&evt->motion, app);
+        break;
+
+    case SDL_KEYUP:
+        evt_key_up(&evt->key, app);
         break;
     }
 }
