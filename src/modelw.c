@@ -310,6 +310,34 @@ static void select_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
             }
         }
     }
+
+    if (button == SDL_BUTTON_RIGHT && state == SDL_PRESSED) {
+        make_tile_shaped_tool_rect(&app->modelw.tool_rect, mouse_screen_coord,
+                                   app);
+        return;
+    }
+
+    if (button == SDL_BUTTON_RIGHT && state == SDL_RELEASED) {
+        if (!SDL_FRectEmpty(&app->modelw.tool_rect.rect)) {
+            struct map_entity *entity = app->map->entities.head;
+            SDL_FRect entity_rect = {0};
+            size_t i = 0;
+            while (entity != NULL) {
+                map_entity_get_frect(entity, &entity_rect);
+                if (SDL_HasIntersectionF(&entity_rect,
+                                         &app->modelw.tool_rect.rect)) {
+                    app->selection.entities[i] = entity;
+                    app->selection.count = ++i;
+                    if (i >= SDL_arraysize(app->selection.entities)) {
+                        SDL_Log("Warning: entity selection overflow.");
+                    }
+                }
+                entity = entity->next;
+            }
+        }
+        reset_tool_rect(&app->modelw.tool_rect);
+        return;
+    }
 }
 
 static void tool_update(SDL_FPoint mouse_screen_coord, Uint8 button,
