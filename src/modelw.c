@@ -184,6 +184,26 @@ static void paint_tile_on_mouse(SDL_FPoint mouse_screen_coord, struct map *map,
     }
 }
 
+static void paint_tiles_in_rect(struct map *map, SDL_FRect rect, int tileset_x,
+                                int tileset_y)
+{
+    if (!SDL_FRectEmpty(&rect)) {
+        SDL_FRect tool_rect_model_coord = rect;
+        int i0 = tool_rect_model_coord.x / map->tile_size;
+        int j0 = tool_rect_model_coord.y / map->tile_size;
+        int i1 = (tool_rect_model_coord.x + tool_rect_model_coord.w) /
+                 map->tile_size;
+        int j1 = (tool_rect_model_coord.y + tool_rect_model_coord.h) /
+                 map->tile_size;
+        for (int i = i0; i < i1; i++) {
+            for (int j = j0; j < j1; j++) {
+                map->tiles[i][j].x = tileset_x;
+                map->tiles[i][j].y = tileset_y;
+            }
+        }
+    }
+}
+
 static void pencil_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
                         Uint8 state, struct app *app)
 {
@@ -200,21 +220,8 @@ static void pencil_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
     }
 
     if (button == SDL_BUTTON_RIGHT && state == SDL_RELEASED) {
-        if (!SDL_FRectEmpty(&app->modelw.tool_rect.rect)) {
-            SDL_FRect tool_rect_model_coord = app->modelw.tool_rect.rect;
-            int i0 = tool_rect_model_coord.x / app->map->tile_size;
-            int j0 = tool_rect_model_coord.y / app->map->tile_size;
-            int i1 = (tool_rect_model_coord.x + tool_rect_model_coord.w) /
-                     app->map->tile_size;
-            int j1 = (tool_rect_model_coord.y + tool_rect_model_coord.h) /
-                     app->map->tile_size;
-            for (int i = i0; i < i1; i++) {
-                for (int j = j0; j < j1; j++) {
-                    app->map->tiles[i][j].x = app->tileset_selected.x;
-                    app->map->tiles[i][j].y = app->tileset_selected.y;
-                }
-            }
-        }
+        paint_tiles_in_rect(app->map, app->modelw.tool_rect.rect,
+                            app->tileset_selected.x, app->tileset_selected.y);
         reset_tool_rect(&app->modelw.tool_rect);
         return;
     }
@@ -235,21 +242,7 @@ static void eraser_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
     }
 
     if (button == SDL_BUTTON_RIGHT && state == SDL_RELEASED) {
-        if (!SDL_FRectEmpty(&app->modelw.tool_rect.rect)) {
-            SDL_FRect tool_rect_model_coord = app->modelw.tool_rect.rect;
-            int i0 = tool_rect_model_coord.x / app->map->tile_size;
-            int j0 = tool_rect_model_coord.y / app->map->tile_size;
-            int i1 = (tool_rect_model_coord.x + tool_rect_model_coord.w) /
-                     app->map->tile_size;
-            int j1 = (tool_rect_model_coord.y + tool_rect_model_coord.h) /
-                     app->map->tile_size;
-            for (int i = i0; i < i1; i++) {
-                for (int j = j0; j < j1; j++) {
-                    app->map->tiles[i][j].x = -1;
-                    app->map->tiles[i][j].y = -1;
-                }
-            }
-        }
+        paint_tiles_in_rect(app->map, app->modelw.tool_rect.rect, -1, -1);
         reset_tool_rect(&app->modelw.tool_rect);
         return;
     }
