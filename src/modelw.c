@@ -166,23 +166,30 @@ void reset_tool_rect(struct tool_rect *tool_rect)
     tool_rect->start.x = tool_rect->start.y = -1;
 }
 
+static void paint_tile_on_mouse(SDL_FPoint mouse_screen_coord, struct map *map,
+                                int tileset_x, int tileset_y)
+{
+    SDL_FPoint mouse;
+    screen_to_model(mouse_screen_coord, &mouse);
+
+    int map_size_px = map->size * map->tile_size;
+    SDL_FRect grid_rect = {0, 0, map_size_px, map_size_px};
+
+    if (SDL_PointInFRect(&mouse, &grid_rect)) {
+        int tile_x = mouse.x / map->tile_size;
+        int tile_y = mouse.y / map->tile_size;
+
+        map->tiles[tile_x][tile_y].x = tileset_x;
+        map->tiles[tile_x][tile_y].y = tileset_y;
+    }
+}
+
 static void pencil_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
                         Uint8 state, struct app *app)
 {
     if (button == SDL_BUTTON_LEFT) {
-        SDL_FPoint mouse;
-        screen_to_model(mouse_screen_coord, &mouse);
-
-        int map_size_px = app->map->size * app->map->tile_size;
-        SDL_FRect grid_rect = {0, 0, map_size_px, map_size_px};
-
-        if (SDL_PointInFRect(&mouse, &grid_rect)) {
-            int tile_x = mouse.x / app->map->tile_size;
-            int tile_y = mouse.y / app->map->tile_size;
-
-            app->map->tiles[tile_x][tile_y].x = app->tileset_selected.x;
-            app->map->tiles[tile_x][tile_y].y = app->tileset_selected.y;
-        }
+        paint_tile_on_mouse(mouse_screen_coord, app->map,
+                            app->tileset_selected.x, app->tileset_selected.y);
         return;
     }
 
@@ -217,19 +224,7 @@ static void eraser_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
                         Uint8 state, struct app *app)
 {
     if (button == SDL_BUTTON_LEFT) {
-        SDL_FPoint mouse;
-        screen_to_model(mouse_screen_coord, &mouse);
-
-        int map_size_px = app->map->size * app->map->tile_size;
-        SDL_FRect grid_rect = {0, 0, map_size_px, map_size_px};
-
-        if (SDL_PointInFRect(&mouse, &grid_rect)) {
-            int tile_x = mouse.x / app->map->tile_size;
-            int tile_y = mouse.y / app->map->tile_size;
-
-            app->map->tiles[tile_x][tile_y].x = -1;
-            app->map->tiles[tile_x][tile_y].y = -1;
-        }
+        paint_tile_on_mouse(mouse_screen_coord, app->map, -1, -1);
         return;
     }
 
