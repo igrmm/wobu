@@ -9,6 +9,15 @@ static SDL_FPoint offset;
 static SDL_FPoint pan_start;
 static float scale;
 
+enum state {
+    STATE_ZOOM,
+    STATE_PAN,
+    STATE_ZOOM_EXTENTS,
+    STATE_ENTITY,
+    STATE_SELECT,
+    STATE_PAINT
+};
+
 static void model_to_screen(SDL_FPoint model_coord, SDL_FPoint *screen_coord)
 {
     screen_coord->x = (model_coord.x - offset.x) * scale;
@@ -43,39 +52,6 @@ static void rect_screen_to_model(SDL_FRect rect_screen_coord,
     rect_model_coord->y = model_coord.y;
     rect_model_coord->w = rect_screen_coord.w / scale;
     rect_model_coord->h = rect_screen_coord.h / scale;
-}
-
-static void zoom(SDL_FPoint mouse_screen_coord, int mouse_wheel_y)
-{
-    SDL_FPoint mouse_model_before_zoom = {0, 0};
-    screen_to_model(mouse_screen_coord, &mouse_model_before_zoom);
-
-    if (mouse_wheel_y > 0) {
-        scale *= 1.1f;
-
-    } else if (mouse_wheel_y < 0) {
-        scale *= 0.9f;
-    }
-
-    SDL_FPoint mouse_model_after_zoom = {0, 0};
-    screen_to_model(mouse_screen_coord, &mouse_model_after_zoom);
-
-    offset.x += (mouse_model_before_zoom.x - mouse_model_after_zoom.x);
-    offset.y += (mouse_model_before_zoom.y - mouse_model_after_zoom.y);
-}
-
-static void pan(Uint32 evt_type, SDL_FPoint mouse_screen_coord)
-{
-    if (evt_type == SDL_MOUSEBUTTONDOWN) {
-        pan_start.x = mouse_screen_coord.x;
-        pan_start.y = mouse_screen_coord.y;
-
-    } else if (evt_type == SDL_MOUSEMOTION) {
-        offset.x -= (mouse_screen_coord.x - pan_start.x) / scale;
-        offset.y -= (mouse_screen_coord.y - pan_start.y) / scale;
-        pan_start.x = mouse_screen_coord.x;
-        pan_start.y = mouse_screen_coord.y;
-    }
 }
 
 void reset_pan_and_zoom(struct app *app)
@@ -204,60 +180,93 @@ static void paint_tiles_in_rect(struct map *map, SDL_FRect rect, int tileset_x,
     }
 }
 
-static void pencil_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
-                        Uint8 state, struct app *app)
+static void state_zoom(SDL_Event *evt, struct app *app)
 {
-    if (button == SDL_BUTTON_LEFT) {
-        paint_tile_on_mouse(mouse_screen_coord, app->map,
-                            app->tileset_selected.x, app->tileset_selected.y);
+    SDL_FPoint mouse_screen_coord = {evt->wheel.mouseX, evt->wheel.mouseY};
+    SDL_FPoint mouse_model_before_zoom = {0, 0};
+
+    screen_to_model(mouse_screen_coord, &mouse_model_before_zoom);
+
+    if (evt->wheel.y > 0) {
+        scale *= 1.1f;
+
+    } else if (evt->wheel.y < 0) {
+        scale *= 0.9f;
+    }
+
+    SDL_FPoint mouse_model_after_zoom = {0, 0};
+    screen_to_model(mouse_screen_coord, &mouse_model_after_zoom);
+
+    offset.x += (mouse_model_before_zoom.x - mouse_model_after_zoom.x);
+    offset.y += (mouse_model_before_zoom.y - mouse_model_after_zoom.y);
+}
+
+static void state_pan(SDL_Event *evt, struct app *app)
+{
+    if (evt->type == SDL_MOUSEBUTTONDOWN) {
+        pan_start = (SDL_FPoint){evt->button.x, evt->button.y};
+
+    } else if (evt->type == SDL_MOUSEMOTION) {
+        offset.x -= (evt->motion.x - pan_start.x) / scale;
+        offset.y -= (evt->motion.y - pan_start.y) / scale;
+        pan_start.x = evt->motion.x;
+        pan_start.y = evt->motion.y;
+    }
+}
+
+static void state_zoom_extents(SDL_Event *evt, struct app *app)
+{
+    reset_pan_and_zoom(app);
+}
+
+static void state_paint(SDL_Event *evt, struct app *app)
+{
+    int tileset_x = -1, tileset_y = -1; // default to eraser
+    if (app->modelw.current_tool->type == PENCIL) {
+        tileset_x = app->tileset_selected.x;
+        tileset_y = app->tileset_selected.y;
+    }
+
+    if (evt->type == SDL_MOUSEBUTTONDOWN &&
+        evt->button.button == SDL_BUTTON_LEFT) {
+        paint_tile_on_mouse((SDL_FPoint){evt->button.x, evt->button.y},
+                            app->map, tileset_x, tileset_y);
         return;
     }
 
-    if (button == SDL_BUTTON_RIGHT && state == SDL_PRESSED) {
-        make_tile_shaped_tool_rect(&app->modelw.tool_rect, mouse_screen_coord,
+    if (evt->type == SDL_MOUSEMOTION && evt->motion.state == SDL_BUTTON_LMASK) {
+        paint_tile_on_mouse((SDL_FPoint){evt->motion.x, evt->motion.y},
+                            app->map, tileset_x, tileset_y);
+        return;
+    }
+
+    if (evt->type == SDL_MOUSEMOTION && evt->motion.state == SDL_BUTTON_RMASK) {
+        make_tile_shaped_tool_rect(&app->modelw.tool_rect,
+                                   (SDL_FPoint){evt->motion.x, evt->motion.y},
                                    app);
         return;
     }
 
-    if (button == SDL_BUTTON_RIGHT && state == SDL_RELEASED) {
-        paint_tiles_in_rect(app->map, app->modelw.tool_rect.rect,
-                            app->tileset_selected.x, app->tileset_selected.y);
+    if (evt->type == SDL_MOUSEBUTTONUP &&
+        evt->button.button == SDL_BUTTON_RIGHT) {
+        paint_tiles_in_rect(app->map, app->modelw.tool_rect.rect, tileset_x,
+                            tileset_y);
         reset_tool_rect(&app->modelw.tool_rect);
         return;
     }
 }
 
-static void eraser_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
-                        Uint8 state, struct app *app)
+static void state_entity(SDL_Event *evt, struct app *app)
 {
-    if (button == SDL_BUTTON_LEFT) {
-        paint_tile_on_mouse(mouse_screen_coord, app->map, -1, -1);
-        return;
-    }
-
-    if (button == SDL_BUTTON_RIGHT && state == SDL_PRESSED) {
-        make_tile_shaped_tool_rect(&app->modelw.tool_rect, mouse_screen_coord,
+    if (evt->type == SDL_MOUSEMOTION && evt->motion.state == SDL_BUTTON_RMASK) {
+        make_tile_shaped_tool_rect(&app->modelw.tool_rect,
+                                   (SDL_FPoint){evt->motion.x, evt->motion.y},
                                    app);
         return;
     }
 
-    if (button == SDL_BUTTON_RIGHT && state == SDL_RELEASED) {
-        paint_tiles_in_rect(app->map, app->modelw.tool_rect.rect, -1, -1);
-        reset_tool_rect(&app->modelw.tool_rect);
-        return;
-    }
-}
-
-static void entity_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
-                        Uint8 state, struct app *app)
-{
-    if (button == SDL_BUTTON_RIGHT && state == SDL_PRESSED) {
-        make_tile_shaped_tool_rect(&app->modelw.tool_rect, mouse_screen_coord,
-                                   app);
-        return;
-    }
-
-    if (button == SDL_BUTTON_RIGHT && state == SDL_RELEASED) {
+    if (evt->type == SDL_MOUSEBUTTONUP &&
+        evt->button.button == SDL_BUTTON_RIGHT) {
         if (!SDL_FRectEmpty(&app->modelw.tool_rect.rect)) {
             SDL_Rect entity_rect = {
                 app->modelw.tool_rect.rect.x, app->modelw.tool_rect.rect.y,
@@ -274,12 +283,12 @@ static void entity_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
     }
 }
 
-static void select_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
-                        Uint8 state, struct app *app)
+static void state_select(SDL_Event *evt, struct app *app)
 {
-    if (button == SDL_BUTTON_LEFT) {
+    if (evt->type == SDL_MOUSEBUTTONDOWN &&
+        evt->button.button == SDL_BUTTON_LEFT) {
         SDL_FPoint mouse;
-        screen_to_model(mouse_screen_coord, &mouse);
+        screen_to_model((SDL_FPoint){evt->button.x, evt->button.y}, &mouse);
 
         int map_size_px = app->map->size * app->map->tile_size;
         SDL_FRect grid_rect = {0, 0, map_size_px, map_size_px};
@@ -297,15 +306,18 @@ static void select_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
                 entity = entity->next;
             }
         }
+        return;
     }
 
-    if (button == SDL_BUTTON_RIGHT && state == SDL_PRESSED) {
-        make_tile_shaped_tool_rect(&app->modelw.tool_rect, mouse_screen_coord,
+    if (evt->type == SDL_MOUSEMOTION && evt->motion.state == SDL_BUTTON_RMASK) {
+        make_tile_shaped_tool_rect(&app->modelw.tool_rect,
+                                   (SDL_FPoint){evt->motion.x, evt->motion.y},
                                    app);
         return;
     }
 
-    if (button == SDL_BUTTON_RIGHT && state == SDL_RELEASED) {
+    if (evt->type == SDL_MOUSEBUTTONUP &&
+        evt->button.button == SDL_BUTTON_RIGHT) {
         if (!SDL_FRectEmpty(&app->modelw.tool_rect.rect)) {
             struct map_entity *entity = app->map->entities.head;
             SDL_FRect entity_rect = {0};
@@ -326,89 +338,15 @@ static void select_tool(SDL_FPoint mouse_screen_coord, Uint8 button,
         reset_tool_rect(&app->modelw.tool_rect);
         return;
     }
-}
 
-static void tool_update(SDL_FPoint mouse_screen_coord, Uint8 button,
-                        Uint8 state, struct app *app)
-{
-    switch (app->modelw.current_tool->type) {
-
-    case PENCIL:
-        pencil_tool(mouse_screen_coord, button, state, app);
-        break;
-
-    case ERASER:
-        eraser_tool(mouse_screen_coord, button, state, app);
-        break;
-
-    case ENTITY:
-        entity_tool(mouse_screen_coord, button, state, app);
-        break;
-
-    case SELECT:
-        select_tool(mouse_screen_coord, button, state, app);
-        break;
-
-    default:
-        break;
-    }
-}
-
-static void evt_mouse_wheel(SDL_MouseWheelEvent *evt, struct app *app)
-{
-    SDL_FPoint mouse = {evt->mouseX, evt->mouseY};
-
-    zoom(mouse, evt->y);
-}
-
-static void evt_mouse_down(SDL_MouseButtonEvent *evt, struct app *app)
-{
-    SDL_FPoint mouse = {evt->x, evt->y};
-
-    if (evt->button == SDL_BUTTON_LEFT || evt->button == SDL_BUTTON_RIGHT) {
-        tool_update(mouse, evt->button, evt->state, app);
-
-    } else if (evt->button == SDL_BUTTON_MIDDLE) {
-        if (evt->clicks == 2) {
-            reset_pan_and_zoom(app);
-
-        } else {
-            pan(evt->type, mouse);
-        }
-    }
-}
-
-static void evt_mouse_up(SDL_MouseButtonEvent *evt, struct app *app)
-{
-    SDL_FPoint mouse = {evt->x, evt->y};
-
-    if (evt->button == SDL_BUTTON_RIGHT) {
-        tool_update(mouse, evt->button, evt->state, app);
-    }
-}
-
-static void evt_mouse_motion(SDL_MouseMotionEvent *evt, struct app *app)
-{
-    SDL_FPoint mouse = {evt->x, evt->y};
-
-    if (evt->state == SDL_BUTTON_LMASK || evt->state == SDL_BUTTON_RMASK) {
-        Uint8 button = (evt->state >> 1) + 1; // inverse of SDL_BUTTON() macro
-        tool_update(mouse, button, SDL_PRESSED, app);
-
-    } else if (evt->state == SDL_BUTTON_MMASK) {
-        pan(evt->type, mouse);
-    }
-}
-
-static void evt_key_up(SDL_KeyboardEvent *evt, struct app *app)
-{
-    switch (evt->keysym.scancode) {
-
-    case SDL_SCANCODE_ESCAPE:
+    if (evt->type == SDL_KEYUP &&
+        evt->key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
         app->selection.count = 0;
-        break;
+        return;
+    }
 
-    case SDL_SCANCODE_DELETE:
+    if (evt->type == SDL_KEYUP &&
+        evt->key.keysym.scancode == SDL_SCANCODE_DELETE) {
         for (int i = 0; i < app->selection.count; i++) {
             if (app->selection.entities[i] != NULL) {
                 map_entities_remove(app->selection.entities[i],
@@ -417,37 +355,72 @@ static void evt_key_up(SDL_KeyboardEvent *evt, struct app *app)
         }
         app->selection.entities[0] = NULL;
         app->selection.count = 0;
-        break;
+        return;
+    }
+}
 
-    default:
+static enum state state_transition(SDL_Event *evt, enum tool_type current_tool)
+{
+    if (evt->type == SDL_MOUSEWHEEL) {
+        return STATE_ZOOM;
+    }
+
+    int mouse_middle_btn_1_click =
+        (evt->type == SDL_MOUSEBUTTONDOWN &&
+         evt->button.button == SDL_BUTTON_MIDDLE && evt->button.clicks == 1);
+    int mouse_drag_middle_btn =
+        (evt->type == SDL_MOUSEMOTION && evt->motion.state == SDL_BUTTON_MMASK);
+    if (mouse_middle_btn_1_click || mouse_drag_middle_btn) {
+        return STATE_PAN;
+    }
+
+    int mouse_middle_btn_2_click =
+        (evt->type == SDL_MOUSEBUTTONDOWN &&
+         evt->button.button == SDL_BUTTON_MIDDLE && evt->button.clicks == 2);
+    if (mouse_middle_btn_2_click) {
+        return STATE_ZOOM_EXTENTS;
+    }
+
+    if (current_tool == ENTITY) {
+        return STATE_ENTITY;
+    }
+
+    if (current_tool == SELECT) {
+        return STATE_SELECT;
+    }
+
+    return STATE_PAINT;
+}
+
+static void state_run(enum state state, SDL_Event *evt, struct app *app)
+{
+    switch (state) {
+
+    case STATE_ZOOM:
+        state_zoom(evt, app);
+        break;
+    case STATE_PAN:
+        state_pan(evt, app);
+        break;
+    case STATE_ZOOM_EXTENTS:
+        state_zoom_extents(evt, app);
+        break;
+    case STATE_ENTITY:
+        state_entity(evt, app);
+        break;
+    case STATE_SELECT:
+        state_select(evt, app);
+        break;
+    case STATE_PAINT:
+        state_paint(evt, app);
         break;
     }
 }
 
 void model_window_handle_event(SDL_Event *evt, struct app *app)
 {
-    switch (evt->type) {
-
-    case SDL_MOUSEWHEEL:
-        evt_mouse_wheel(&evt->wheel, app);
-        break;
-
-    case SDL_MOUSEBUTTONDOWN:
-        evt_mouse_down(&evt->button, app);
-        break;
-
-    case SDL_MOUSEBUTTONUP:
-        evt_mouse_up(&evt->button, app);
-        break;
-
-    case SDL_MOUSEMOTION:
-        evt_mouse_motion(&evt->motion, app);
-        break;
-
-    case SDL_KEYUP:
-        evt_key_up(&evt->key, app);
-        break;
-    }
+    enum state state = state_transition(evt, app->modelw.current_tool->type);
+    state_run(state, evt, app);
 }
 
 // TODO OPTMIZATION, CLIPPING
