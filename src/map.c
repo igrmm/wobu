@@ -389,7 +389,7 @@ int map_serialize(struct map *map, const char *path)
         goto serialization_error;
     }
 
-    // BEGINNING OF JSON STRING
+    // BEGINNING OF JSON STRING + TILES
     if (!map_jstr_cat(map_jstr, "{\n    \"tiles\": [")) {
         goto serialization_error;
     }
@@ -421,14 +421,63 @@ int map_serialize(struct map *map, const char *path)
         }
     }
 
-    // ENDING OF JSON STRING
-    if (!map_jstr_cat(map_jstr, "]\n}")) {
+    // ENDING OF TILES
+    if (!map_jstr_cat(map_jstr, "],\n")) {
+        goto serialization_error;
+    }
+
+    // BEGIN OF ENTITIES
+    if (!map_jstr_cat(map_jstr, "    \"entities\": [")) {
+        goto serialization_error;
+    }
+
+    struct map_entity *entity = map->entities.head;
+    while (entity != NULL) {
+        if (!map_jstr_cat(map_jstr, "\n        {")) {
+            goto serialization_error;
+        }
+        struct map_entity_item *item = entity->item;
+        while (item != NULL) {
+            if (!map_jstr_cat(map_jstr, "\n            \"%s\": ", item->name)) {
+                goto serialization_error;
+            }
+            switch (item->type) {
+
+            case NUMBER:
+                if (!map_jstr_cat(map_jstr, "%i", item->value.number)) {
+                    goto serialization_error;
+                }
+                break;
+            case STRING:
+                if (!map_jstr_cat(map_jstr, "\"%s\"", item->value.string)) {
+                    goto serialization_error;
+                }
+                break;
+            case BOOL:
+                break;
+            }
+            if (item->next != NULL && !map_jstr_cat(map_jstr, ",")) {
+                goto serialization_error;
+            }
+            item = item->next;
+        }
+        if (!map_jstr_cat(map_jstr, "\n        }")) {
+            goto serialization_error;
+        }
+        if (entity->next != NULL && !map_jstr_cat(map_jstr, ",")) {
+            goto serialization_error;
+        }
+        entity = entity->next;
+    }
+
+    // ENDING OF JSON STRING + ENTITIES
+    if (!map_jstr_cat(map_jstr, "\n    ]\n}")) {
         goto serialization_error;
     }
 
     // WRITE JSON STRING TO FILE
     size_t len = SDL_strlen(map_jstr);
-    for (size_t i = 0; i <= len; i++)
+    for (size_t i = 0; i < len; i++)
         SDL_RWwrite(file, &map_jstr[i], sizeof(char), 1);
     SDL_RWclose(file);
     SDL_Log("Map saved to file: %zu bytes - %i tiles - %i ms", len, total_tiles,
