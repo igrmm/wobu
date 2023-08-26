@@ -19,8 +19,12 @@ int menu_window(struct app *app, struct nk_context *ctx)
                                 nk_vec2(100, 100))) {
             nk_layout_row_dynamic(ctx, h, 1);
 
-            if (nk_menu_item_label(ctx, "new", NK_TEXT_LEFT))
+            if (nk_menu_item_label(ctx, "new", NK_TEXT_LEFT)) {
                 map_reset_tiles(app->map);
+                map_destroy_entities(app->map->entities.head);
+                app->map->entities.head = app->map->entities.tail = NULL;
+                app->selection.count = 0;
+            }
 
             if (nk_menu_item_label(ctx, "save", NK_TEXT_LEFT))
                 map_serialize(app->map, "start.wb");
