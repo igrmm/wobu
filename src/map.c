@@ -520,21 +520,21 @@ int map_deserialize(struct map *map, const char *path)
 
         struct json_array_element_s *x_object = tile_array->start;
         struct json_number_s *x_number = json_value_as_number(x_object->value);
-        int x = strtol(x_number->number, NULL, 10);
+        int x = SDL_strtol(x_number->number, NULL, 10);
 
         struct json_array_element_s *y_object = x_object->next;
         struct json_number_s *y_number = json_value_as_number(y_object->value);
-        int y = strtol(y_number->number, NULL, 10);
+        int y = SDL_strtol(y_number->number, NULL, 10);
 
         struct json_array_element_s *tileset_x_object = y_object->next;
         struct json_number_s *tileset_x_number =
             json_value_as_number(tileset_x_object->value);
-        int tileset_x = strtol(tileset_x_number->number, NULL, 10);
+        int tileset_x = SDL_strtol(tileset_x_number->number, NULL, 10);
 
         struct json_array_element_s *tileset_y_object = tileset_x_object->next;
         struct json_number_s *tileset_y_number =
             json_value_as_number(tileset_y_object->value);
-        int tileset_y = strtol(tileset_y_number->number, NULL, 10);
+        int tileset_y = SDL_strtol(tileset_y_number->number, NULL, 10);
 
         map->tiles[x][y].x = tileset_x;
         map->tiles[x][y].y = tileset_y;
