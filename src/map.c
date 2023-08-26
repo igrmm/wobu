@@ -545,7 +545,7 @@ int map_deserialize(struct map *map, const char *path)
     SDL_Log("Map deserialized with %i tiles in %i ms.", total_tiles,
             (int)(SDL_GetTicks64() - now));
 
-    free(json);
+    SDL_free(json);
 
     return 1;
 }
