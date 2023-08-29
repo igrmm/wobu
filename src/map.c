@@ -279,18 +279,13 @@ void map_entities_remove(struct map_entity *entity,
     map_destroy_entity(entity);
 }
 
-struct map_entity *map_deserialize_entities(struct json_value_s *json,
+struct map_entity *map_deserialize_entities(struct json_array_s *entities_array,
                                             struct map_entity **tail)
 {
     size_t mem = 0;
     Uint32 now = SDL_GetTicks64();
     // DESERIALIZE JSON STRING
     // todo: json error handling
-    struct json_object_s *json_root = (struct json_object_s *)json->payload;
-    struct json_object_element_s *entities_object = json_root->start;
-    struct json_array_s *entities_array =
-        json_value_as_array(entities_object->value);
-
     struct map_entity *entities = NULL, *prev = NULL;
     struct map_entity **entity = &entities;
 
@@ -370,8 +365,6 @@ struct map_entity *map_deserialize_entities(struct json_value_s *json,
 
     SDL_Log("Entities deserialized with %i entities in %i ms with %zu bytes.",
             number_of_entities, (int)(SDL_GetTicks64() - now), mem);
-
-    SDL_free(json);
 
     return entities;
 }
@@ -540,6 +533,17 @@ int map_deserialize(struct map *map, const char *path)
         map->tiles[x][y].y = tileset_y;
 
         tile_object = tile_object->next;
+    }
+
+    struct json_array_s *entities_array =
+        json_value_as_array(layer_object->next->value);
+    map->entities.head =
+        map_deserialize_entities(entities_array, &map->entities.tail);
+    id = 0;
+    struct map_entity *entity = map->entities.head;
+    while (entity != NULL) {
+        entity->id = map_make_id();
+        entity = entity->next;
     }
 
     SDL_Log("Map deserialized with %i tiles in %i ms.", total_tiles,

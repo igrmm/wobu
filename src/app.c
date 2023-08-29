@@ -55,7 +55,11 @@ static int app_template_init(struct map_entity_group *template)
         SDL_Log("Error parsing entitiy templates json.");
         return 0;
     }
-    template->entities[0] = map_deserialize_entities(json, NULL);
+    struct json_object_s *json_root = (struct json_object_s *)json->payload;
+    struct json_array_s *entities_array =
+        json_value_as_array(json_root->start->value);
+    template->entities[0] = map_deserialize_entities(entities_array, NULL);
+    SDL_free(json);
     if (template->entities[0] == NULL) {
         SDL_Log("Error deserializing entity templates.");
         return 0;

@@ -62,7 +62,7 @@ void map_destroy_entities(struct map_entity *entities);
 void map_entities_add(struct map_entity *entity, struct map_entities *entities);
 void map_entities_remove(struct map_entity *entity,
                          struct map_entities *entities);
-struct map_entity *map_deserialize_entities(struct json_value_s *json,
+struct map_entity *map_deserialize_entities(struct json_array_s *entities_array,
                                             struct map_entity **tail);
 int map_serialize(struct map *map, const char *path);
 int map_deserialize(struct map *map, const char *path);
