@@ -9,6 +9,9 @@ static SDL_FPoint offset;
 static SDL_FPoint pan_start;
 static float scale;
 
+static int entity_grabbed = 0;
+static SDL_FPoint entity_grabbed_offset;
+
 enum state {
     STATE_ZOOM,
     STATE_PAN,
@@ -285,8 +288,70 @@ static void state_entity(SDL_Event *evt, struct app *app)
 
 static void state_select(SDL_Event *evt, struct app *app)
 {
+    const Uint8 *keys = SDL_GetKeyboardState(NULL);
+
+    // GRAB/MOVE SINGLE ENTITY
     if (evt->type == SDL_MOUSEBUTTONDOWN &&
+        evt->button.button == SDL_BUTTON_LEFT && keys[SDL_SCANCODE_LCTRL]) {
+        if (entity_grabbed == 0 && app->selection.count == 1) {
+            SDL_FRect entity_rect = {0};
+            map_entity_get_frect(app->selection.entities[0], &entity_rect);
+            SDL_FPoint mouse;
+            screen_to_model((SDL_FPoint){evt->button.x, evt->button.y}, &mouse);
+            if (SDL_PointInFRect(&mouse, &entity_rect)) {
+                entity_grabbed = 1;
+                int tile_size = app->map->tile_size;
+                entity_grabbed_offset.x =
+                    (int)((mouse.x - entity_rect.x) / tile_size) * tile_size;
+                entity_grabbed_offset.y =
+                    (int)((mouse.y - entity_rect.y) / tile_size) * tile_size;
+            }
+        }
+        return;
+    }
+
+    if (evt->type == SDL_MOUSEMOTION && evt->motion.state == SDL_BUTTON_LMASK &&
+        keys[SDL_SCANCODE_LCTRL]) {
+        if (entity_grabbed == 1 && app->selection.count == 1) {
+            SDL_FPoint mouse;
+            screen_to_model((SDL_FPoint){evt->button.x, evt->button.y}, &mouse);
+            int map_size_px = app->map->size * app->map->tile_size;
+            SDL_FRect grid_rect = {0, 0, map_size_px, map_size_px};
+
+            if (SDL_PointInFRect(&mouse, &grid_rect)) {
+                int tile_size = app->map->tile_size;
+
+                // round mouse to "tiles"
+                mouse.x = (int)(mouse.x / tile_size) * tile_size;
+                mouse.y = (int)(mouse.y / tile_size) * tile_size;
+
+                SDL_Rect entity_rect = {0};
+                map_entity_get_rect(app->selection.entities[0], &entity_rect);
+                entity_rect.x = mouse.x - entity_grabbed_offset.x;
+                entity_rect.y = mouse.y - entity_grabbed_offset.y;
+                map_entity_set_rect(app->selection.entities[0], &entity_rect);
+            }
+        }
+        return;
+    }
+
+    if (evt->type == SDL_MOUSEBUTTONUP &&
         evt->button.button == SDL_BUTTON_LEFT) {
+        SDL_Rect intersect = {0};
+        SDL_Rect entity_rect = {0};
+        map_entity_get_rect(app->selection.entities[0], &entity_rect);
+        int map_size_px = app->map->size * app->map->tile_size;
+        SDL_Rect grid_rect = {0, 0, map_size_px, map_size_px};
+        if (SDL_IntersectRect(&entity_rect, &grid_rect, &intersect)) {
+            map_entity_set_rect(app->selection.entities[0], &intersect);
+        }
+        entity_grabbed = 0;
+        return;
+    }
+
+    // SELECT ENTITIES
+    if (evt->type == SDL_MOUSEBUTTONDOWN &&
+        evt->button.button == SDL_BUTTON_LEFT && !keys[SDL_SCANCODE_LCTRL]) {
         SDL_FPoint mouse;
         screen_to_model((SDL_FPoint){evt->button.x, evt->button.y}, &mouse);
 
@@ -309,7 +374,8 @@ static void state_select(SDL_Event *evt, struct app *app)
         return;
     }
 
-    if (evt->type == SDL_MOUSEMOTION && evt->motion.state == SDL_BUTTON_RMASK) {
+    if (evt->type == SDL_MOUSEMOTION && evt->motion.state == SDL_BUTTON_RMASK &&
+        !keys[SDL_SCANCODE_LCTRL]) {
         make_tile_shaped_tool_rect(&app->modelw.tool_rect,
                                    (SDL_FPoint){evt->motion.x, evt->motion.y},
                                    app);
@@ -339,12 +405,14 @@ static void state_select(SDL_Event *evt, struct app *app)
         return;
     }
 
+    // REMOVE SELECTION
     if (evt->type == SDL_KEYUP &&
         evt->key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
         app->selection.count = 0;
         return;
     }
 
+    // DELETE SELECTED ENTITIES
     if (evt->type == SDL_KEYUP &&
         evt->key.keysym.scancode == SDL_SCANCODE_DELETE) {
         for (int i = 0; i < app->selection.count; i++) {
