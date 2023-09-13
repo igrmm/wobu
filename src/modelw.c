@@ -427,7 +427,7 @@ static void state_select(SDL_Event *evt, struct app *app)
     }
 }
 
-static enum state state_transition(SDL_Event *evt, enum tool_type current_tool)
+static enum state handle_event(SDL_Event *evt, enum tool_type current_tool)
 {
     if (evt->type == SDL_MOUSEWHEEL) {
         return STATE_ZOOM;
@@ -487,7 +487,7 @@ static void state_run(enum state state, SDL_Event *evt, struct app *app)
 
 void model_window_handle_event(SDL_Event *evt, struct app *app)
 {
-    enum state state = state_transition(evt, app->modelw.current_tool->type);
+    enum state state = handle_event(evt, app->modelw.current_tool->type);
     state_run(state, evt, app);
 }
 
