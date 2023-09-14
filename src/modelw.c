@@ -18,7 +18,26 @@ enum state {
     STATE_ZOOM_EXTENTS,
     STATE_ENTITY,
     STATE_SELECT,
-    STATE_PAINT
+    STATE_PAINT,
+    NUM_STATES
+};
+
+static void state_zoom(SDL_Event *evt, struct app *app);
+static void state_pan(SDL_Event *evt, struct app *app);
+static void state_zoom_extents(SDL_Event *evt, struct app *app);
+static void state_entity(SDL_Event *evt, struct app *app);
+static void state_select(SDL_Event *evt, struct app *app);
+static void state_paint(SDL_Event *evt, struct app *app);
+
+static void (*state_table[NUM_STATES])(SDL_Event *evt, struct app *app) = {
+    // clang-format off
+    state_zoom,
+    state_pan,
+    state_zoom_extents,
+    state_entity,
+    state_select,
+    state_paint
+    // clang-format on
 };
 
 static void model_to_screen(SDL_FPoint model_coord, SDL_FPoint *screen_coord)
@@ -222,43 +241,6 @@ static void state_zoom_extents(SDL_Event *evt, struct app *app)
     reset_pan_and_zoom(app);
 }
 
-static void state_paint(SDL_Event *evt, struct app *app)
-{
-    int tileset_x = -1, tileset_y = -1; // default to eraser
-    if (app->modelw.current_tool->type == PENCIL) {
-        tileset_x = app->tileset_selected.x;
-        tileset_y = app->tileset_selected.y;
-    }
-
-    if (evt->type == SDL_MOUSEBUTTONDOWN &&
-        evt->button.button == SDL_BUTTON_LEFT) {
-        paint_tile_on_mouse((SDL_FPoint){evt->button.x, evt->button.y},
-                            app->map, tileset_x, tileset_y);
-        return;
-    }
-
-    if (evt->type == SDL_MOUSEMOTION && evt->motion.state == SDL_BUTTON_LMASK) {
-        paint_tile_on_mouse((SDL_FPoint){evt->motion.x, evt->motion.y},
-                            app->map, tileset_x, tileset_y);
-        return;
-    }
-
-    if (evt->type == SDL_MOUSEMOTION && evt->motion.state == SDL_BUTTON_RMASK) {
-        make_tile_shaped_tool_rect(&app->modelw.tool_rect,
-                                   (SDL_FPoint){evt->motion.x, evt->motion.y},
-                                   app);
-        return;
-    }
-
-    if (evt->type == SDL_MOUSEBUTTONUP &&
-        evt->button.button == SDL_BUTTON_RIGHT) {
-        paint_tiles_in_rect(app->map, app->modelw.tool_rect.rect, tileset_x,
-                            tileset_y);
-        reset_tool_rect(&app->modelw.tool_rect);
-        return;
-    }
-}
-
 static void state_entity(SDL_Event *evt, struct app *app)
 {
     if (evt->type == SDL_MOUSEMOTION && evt->motion.state == SDL_BUTTON_RMASK) {
@@ -427,6 +409,43 @@ static void state_select(SDL_Event *evt, struct app *app)
     }
 }
 
+static void state_paint(SDL_Event *evt, struct app *app)
+{
+    int tileset_x = -1, tileset_y = -1; // default to eraser
+    if (app->modelw.current_tool->type == PENCIL) {
+        tileset_x = app->tileset_selected.x;
+        tileset_y = app->tileset_selected.y;
+    }
+
+    if (evt->type == SDL_MOUSEBUTTONDOWN &&
+        evt->button.button == SDL_BUTTON_LEFT) {
+        paint_tile_on_mouse((SDL_FPoint){evt->button.x, evt->button.y},
+                            app->map, tileset_x, tileset_y);
+        return;
+    }
+
+    if (evt->type == SDL_MOUSEMOTION && evt->motion.state == SDL_BUTTON_LMASK) {
+        paint_tile_on_mouse((SDL_FPoint){evt->motion.x, evt->motion.y},
+                            app->map, tileset_x, tileset_y);
+        return;
+    }
+
+    if (evt->type == SDL_MOUSEMOTION && evt->motion.state == SDL_BUTTON_RMASK) {
+        make_tile_shaped_tool_rect(&app->modelw.tool_rect,
+                                   (SDL_FPoint){evt->motion.x, evt->motion.y},
+                                   app);
+        return;
+    }
+
+    if (evt->type == SDL_MOUSEBUTTONUP &&
+        evt->button.button == SDL_BUTTON_RIGHT) {
+        paint_tiles_in_rect(app->map, app->modelw.tool_rect.rect, tileset_x,
+                            tileset_y);
+        reset_tool_rect(&app->modelw.tool_rect);
+        return;
+    }
+}
+
 static enum state handle_event(SDL_Event *evt, enum tool_type current_tool)
 {
     if (evt->type == SDL_MOUSEWHEEL) {
@@ -462,27 +481,7 @@ static enum state handle_event(SDL_Event *evt, enum tool_type current_tool)
 
 static void state_run(enum state state, SDL_Event *evt, struct app *app)
 {
-    switch (state) {
-
-    case STATE_ZOOM:
-        state_zoom(evt, app);
-        break;
-    case STATE_PAN:
-        state_pan(evt, app);
-        break;
-    case STATE_ZOOM_EXTENTS:
-        state_zoom_extents(evt, app);
-        break;
-    case STATE_ENTITY:
-        state_entity(evt, app);
-        break;
-    case STATE_SELECT:
-        state_select(evt, app);
-        break;
-    case STATE_PAINT:
-        state_paint(evt, app);
-        break;
-    }
+    (*state_table[state])(evt, app);
 }
 
 void model_window_handle_event(SDL_Event *evt, struct app *app)
