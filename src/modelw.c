@@ -17,9 +17,11 @@ enum state {
     STATE_ZOOM,
     STATE_PAN,
     STATE_ZOOM_EXTENTS,
-    STATE_ENTITY,
+    STATE_ENTITY_RECT,
     STATE_SELECT,
+    STATE_SELECT_RECT,
     STATE_PAINT,
+    STATE_PAINT_RECT,
     NUM_STATES
 };
 
@@ -27,9 +29,11 @@ static void state_mk_tool_rect(SDL_Event *evt, struct app *app);
 static void state_zoom(SDL_Event *evt, struct app *app);
 static void state_pan(SDL_Event *evt, struct app *app);
 static void state_zoom_extents(SDL_Event *evt, struct app *app);
-static void state_entity(SDL_Event *evt, struct app *app);
+static void state_entity_rect(SDL_Event *evt, struct app *app);
 static void state_select(SDL_Event *evt, struct app *app);
+static void state_select_rect(SDL_Event *evt, struct app *app);
 static void state_paint(SDL_Event *evt, struct app *app);
+static void state_paint_rect(SDL_Event *evt, struct app *app);
 
 static void (*state_table[NUM_STATES])(SDL_Event *evt, struct app *app) = {
     // clang-format off
@@ -37,9 +41,11 @@ static void (*state_table[NUM_STATES])(SDL_Event *evt, struct app *app) = {
     state_zoom,
     state_pan,
     state_zoom_extents,
-    state_entity,
+    state_entity_rect,
     state_select,
-    state_paint
+    state_select_rect,
+    state_paint,
+    state_paint_rect
     // clang-format on
 };
 
@@ -250,24 +256,20 @@ static void state_zoom_extents(SDL_Event *evt, struct app *app)
     reset_pan_and_zoom(app);
 }
 
-static void state_entity(SDL_Event *evt, struct app *app)
+static void state_entity_rect(SDL_Event *evt, struct app *app)
 {
-    if (evt->type == SDL_MOUSEBUTTONUP &&
-        evt->button.button == SDL_BUTTON_RIGHT) {
-        if (!SDL_FRectEmpty(&app->modelw.tool_rect.rect)) {
-            SDL_Rect entity_rect = {
-                app->modelw.tool_rect.rect.x, app->modelw.tool_rect.rect.y,
-                app->modelw.tool_rect.rect.w, app->modelw.tool_rect.rect.h};
-            struct map_entity *entity =
-                map_create_entity(app->template.entities[0]);
-            map_entity_set_rect(entity, &entity_rect);
-            map_entities_add(entity, &app->map->entities);
-            app->selection.entities[0] = entity;
-            app->selection.count = 1;
-        }
-        reset_tool_rect(&app->modelw.tool_rect);
-        return;
+    if (!SDL_FRectEmpty(&app->modelw.tool_rect.rect)) {
+        SDL_Rect entity_rect = {
+            app->modelw.tool_rect.rect.x, app->modelw.tool_rect.rect.y,
+            app->modelw.tool_rect.rect.w, app->modelw.tool_rect.rect.h};
+        struct map_entity *entity =
+            map_create_entity(app->template.entities[0]);
+        map_entity_set_rect(entity, &entity_rect);
+        map_entities_add(entity, &app->map->entities);
+        app->selection.entities[0] = entity;
+        app->selection.count = 1;
     }
+    reset_tool_rect(&app->modelw.tool_rect);
 }
 
 static void state_select(SDL_Event *evt, struct app *app)
@@ -358,29 +360,6 @@ static void state_select(SDL_Event *evt, struct app *app)
         return;
     }
 
-    if (evt->type == SDL_MOUSEBUTTONUP &&
-        evt->button.button == SDL_BUTTON_RIGHT) {
-        if (!SDL_FRectEmpty(&app->modelw.tool_rect.rect)) {
-            struct map_entity *entity = app->map->entities.head;
-            SDL_FRect entity_rect = {0};
-            size_t i = 0;
-            while (entity != NULL) {
-                map_entity_get_frect(entity, &entity_rect);
-                if (SDL_HasIntersectionF(&entity_rect,
-                                         &app->modelw.tool_rect.rect)) {
-                    app->selection.entities[i] = entity;
-                    app->selection.count = ++i;
-                    if (i >= SDL_arraysize(app->selection.entities)) {
-                        SDL_Log("Warning: entity selection overflow.");
-                    }
-                }
-                entity = entity->next;
-            }
-        }
-        reset_tool_rect(&app->modelw.tool_rect);
-        return;
-    }
-
     // REMOVE SELECTION
     if (evt->type == SDL_KEYUP &&
         evt->key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
@@ -403,6 +382,28 @@ static void state_select(SDL_Event *evt, struct app *app)
     }
 }
 
+static void state_select_rect(SDL_Event *evt, struct app *app)
+{
+    if (!SDL_FRectEmpty(&app->modelw.tool_rect.rect)) {
+        struct map_entity *entity = app->map->entities.head;
+        SDL_FRect entity_rect = {0};
+        size_t i = 0;
+        while (entity != NULL) {
+            map_entity_get_frect(entity, &entity_rect);
+            if (SDL_HasIntersectionF(&entity_rect,
+                                     &app->modelw.tool_rect.rect)) {
+                app->selection.entities[i] = entity;
+                app->selection.count = ++i;
+                if (i >= SDL_arraysize(app->selection.entities)) {
+                    SDL_Log("Warning: entity selection overflow.");
+                }
+            }
+            entity = entity->next;
+        }
+    }
+    reset_tool_rect(&app->modelw.tool_rect);
+}
+
 static void state_paint(SDL_Event *evt, struct app *app)
 {
     int tileset_x = -1, tileset_y = -1; // default to eraser
@@ -421,16 +422,19 @@ static void state_paint(SDL_Event *evt, struct app *app)
     if (evt->type == SDL_MOUSEMOTION && evt->motion.state == SDL_BUTTON_LMASK) {
         paint_tile_on_mouse((SDL_FPoint){evt->motion.x, evt->motion.y},
                             app->map, tileset_x, tileset_y);
-        return;
     }
+}
 
-    if (evt->type == SDL_MOUSEBUTTONUP &&
-        evt->button.button == SDL_BUTTON_RIGHT) {
-        paint_tiles_in_rect(app->map, app->modelw.tool_rect.rect, tileset_x,
-                            tileset_y);
-        reset_tool_rect(&app->modelw.tool_rect);
-        return;
+static void state_paint_rect(SDL_Event *evt, struct app *app)
+{
+    int tileset_x = -1, tileset_y = -1; // default to eraser
+    if (app->modelw.current_tool->type == PENCIL) {
+        tileset_x = app->tileset_selected.x;
+        tileset_y = app->tileset_selected.y;
     }
+    paint_tiles_in_rect(app->map, app->modelw.tool_rect.rect, tileset_x,
+                        tileset_y);
+    reset_tool_rect(&app->modelw.tool_rect);
 }
 
 static enum state handle_event(SDL_Event *evt, enum tool_type current_tool)
@@ -459,8 +463,20 @@ static enum state handle_event(SDL_Event *evt, enum tool_type current_tool)
         return STATE_ZOOM_EXTENTS;
     }
 
-    if (current_tool == ENTITY) {
-        return STATE_ENTITY;
+    if (evt->type == SDL_MOUSEBUTTONUP &&
+        evt->button.button == SDL_BUTTON_RIGHT) {
+        switch (current_tool) {
+
+        case PENCIL:
+        case ERASER:
+            return STATE_PAINT_RECT;
+        case ENTITY:
+            return STATE_ENTITY_RECT;
+        case SELECT:
+            return STATE_SELECT_RECT;
+        default:
+            break;
+        }
     }
 
     if (current_tool == SELECT) {
