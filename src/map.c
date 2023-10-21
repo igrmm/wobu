@@ -1,5 +1,5 @@
+#include "../external/json.h/json.h"
 #include "SDL.h"
-#include "external/json.h"
 
 #include "jsonffile.h"
 #include "map.h"

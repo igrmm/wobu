@@ -1,6 +1,6 @@
+#include "../external/json.h/json.h"
 #include "SDL.h"
 #include "SDL_image.h"
-#include "external/json.h"
 
 #include "app.h"
 #include "colors.h"

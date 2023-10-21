@@ -1,7 +1,7 @@
 #ifndef JSONFFILE_H
 #define JSONFFILE_H
 
-#include "external/json.h"
+#include "../external/json.h/json.h"
 
 #define JSON_BUFSIZ 1000000
 

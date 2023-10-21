@@ -1,8 +1,6 @@
 #include "SDL.h"
-#include "external/json.h"
 
 #include "app.h"
-#include "jsonffile.h"
 #include "map.h"
 #include "propertiesw.h"
 

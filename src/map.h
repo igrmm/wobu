@@ -1,8 +1,8 @@
 #ifndef MAP_H
 #define MAP_H
 
+#include "../external/json.h/json.h"
 #include "SDL.h"
-#include "external/json.h"
 
 #define TILES_MAX 100
 #define ENTITY_STR_BUFSIZ 24
