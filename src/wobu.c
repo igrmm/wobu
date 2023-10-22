@@ -5,7 +5,7 @@
 #define NK_IMPLEMENTATION
 #include "nk.h"
 #define NK_SDL_RENDERER_IMPLEMENTATION
-#include "external/nuklear_sdl_renderer.h"
+#include "../external/Nuklear/demo/sdl_renderer/nuklear_sdl_renderer.h"
 
 #include "app.h"
 
