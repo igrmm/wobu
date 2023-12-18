@@ -7,6 +7,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 add_subdirectory(external/SDL EXCLUDE_FROM_ALL)
 add_subdirectory(external/SDL_image EXCLUDE_FROM_ALL)
+add_subdirectory(external/SDL_ttf EXCLUDE_FROM_ALL)
 
 add_executable(${PROJECT_NAME}
     #WIN32
@@ -20,6 +21,7 @@ add_executable(${PROJECT_NAME}
     src/toolsw.c
     src/map.c
     src/propertiesw.c
+    src/txt.c
     )
 
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
@@ -38,4 +40,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL2::SDL2main
     SDL2::SDL2
     SDL2_image
+    SDL2_ttf
     )
