@@ -7,55 +7,18 @@
 
 #include "app.h"
 
+static SDL_Window *win;
+static SDL_Renderer *renderer;
+static struct nk_context *ctx;
+static struct app app;
+static int setup(void);
+static void shutdown(void);
+static int running = 0;
+
 int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
 {
-    struct app app;
-    SDL_Window *win;
-    SDL_Renderer *renderer;
-    int running = 1;
-
-    struct nk_context *ctx;
-
-    SDL_Init(SDL_INIT_VIDEO);
-
-    win =
-        SDL_CreateWindow("wobu", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                         1200, 800, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
-
-    if (win == NULL) {
-        SDL_Log("Error SDL_CreateWindow %s", SDL_GetError());
-        return 1;
-    }
-
-    renderer = SDL_CreateRenderer(
-        win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-
-    if (renderer == NULL) {
-        SDL_Log("Error SDL_CreateRenderer %s", SDL_GetError());
-        SDL_DestroyWindow(win);
-        return 1;
-    }
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-
-    ctx = nk_sdl_init(win, renderer);
-    {
-        struct nk_font_atlas *atlas;
-        struct nk_font_config config = nk_font_config(0);
-        struct nk_font *font;
-
-        nk_sdl_font_stash_begin(&atlas);
-        font = nk_font_atlas_add_default(atlas, 13, &config);
-        nk_sdl_font_stash_end();
-        nk_style_set_font(ctx, &font->handle);
-    }
-
-    int exit_status = 0;
-
-    if (!app_init(&app, renderer)) {
-        SDL_Log("Failed to create app.");
-        exit_status = 1;
-        goto cleanup;
-    }
+    if (setup() < 0)
+        shutdown();
 
     while (running) {
         /* Input */
@@ -63,7 +26,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
         nk_input_begin(ctx);
         while (SDL_PollEvent(&evt)) {
             if (evt.type == SDL_QUIT)
-                goto cleanup;
+                running = 0;
 
             if (nk_item_is_any_active(ctx)) {
                 nk_sdl_handle_event(&evt);
@@ -80,8 +43,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
         SDL_GL_GetDrawableSize(win, &app.screen_width, &app.screen_height);
         if (!app_run(&app, ctx)) {
             SDL_Log("Failed to run app.");
-            exit_status = 1;
-            goto cleanup;
+            running = 0;
         };
 
         /* Render */
@@ -92,11 +54,59 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
         SDL_RenderPresent(renderer);
     }
 
-cleanup:
+    shutdown();
+    return 0;
+}
+
+static int setup(void)
+{
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+        SDL_Log("SDL_Init Error: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    win =
+        SDL_CreateWindow("wobu", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                         1200, 800, SDL_WINDOW_RESIZABLE);
+    if (win == NULL) {
+        SDL_Log("SDL_CreateWindow Error: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    renderer = SDL_CreateRenderer(win, -1, 0);
+    if (renderer == NULL) {
+        SDL_Log("SDL_CreateRenderer Error: %s\n", SDL_GetError());
+        return -1;
+    }
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    ctx = nk_sdl_init(win, renderer);
+    {
+        struct nk_font_atlas *atlas;
+        struct nk_font_config config = nk_font_config(0);
+        struct nk_font *font;
+
+        nk_sdl_font_stash_begin(&atlas);
+        font = nk_font_atlas_add_default(atlas, 13, &config);
+        nk_sdl_font_stash_end();
+        nk_style_set_font(ctx, &font->handle);
+    }
+
+    if (!app_init(&app, renderer)) {
+        SDL_Log("Failed to create app.");
+        return -1;
+    }
+
+    running = 1;
+
+    return 0;
+}
+
+static void shutdown(void)
+{
+    app_deinit(&app);
     nk_sdl_shutdown();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(win);
     SDL_Quit();
-    app_deinit(&app);
-    return exit_status;
 }
