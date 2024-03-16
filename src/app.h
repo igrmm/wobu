@@ -1,7 +1,7 @@
 #ifndef APP_H
 #define APP_H
 
-#include "SDL.h"
+#include "SDL.h" // IWYU pragma: keep //clangd
 #include "nk.h"
 
 #include "map.h"

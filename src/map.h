@@ -2,7 +2,7 @@
 #define MAP_H
 
 #include "../external/json.h/json.h"
-#include "SDL.h"
+#include "SDL.h" // IWYU pragma: keep //clangd
 
 #define TILES_MAX 100
 #define ENTITY_STR_BUFSIZ 24

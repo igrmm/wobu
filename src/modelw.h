@@ -1,7 +1,7 @@
 #ifndef MODELW_H
 #define MODELW_H
 
-#include "SDL.h"
+#include "SDL.h" // IWYU pragma: keep //clangd
 #include "nk.h"
 
 enum tool_type { PENCIL, ERASER, ENTITY, SELECT, NUMBER_OF_TOOLS };

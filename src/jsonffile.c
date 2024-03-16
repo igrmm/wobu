@@ -1,5 +1,5 @@
 #include "../external/json.h/json.h"
-#include "SDL.h"
+#include "SDL.h" // IWYU pragma: keep //clangd
 
 #include "jsonffile.h"
 

@@ -1,4 +1,4 @@
-#include "SDL.h"
+#include "SDL.h" // IWYU pragma: keep //clangd
 
 #include "txt.h"
 

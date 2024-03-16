@@ -1,7 +1,7 @@
 #ifndef TXT_H
 #define TXT_H
 
-#include "SDL.h"
+#include "SDL.h" // IWYU pragma: keep //clangd
 #include "SDL_image.h"
 #include "SDL_ttf.h"
 

@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "SDL.h"
+#include "SDL.h" // IWYU pragma: keep //clangd
 
 #define NK_IMPLEMENTATION
 #include "nk.h"

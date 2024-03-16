@@ -1,7 +1,7 @@
 #ifndef STATUSW_H
 #define STATUSW_H
 
-#include "SDL.h"
+#include "SDL.h" // IWYU pragma: keep //clangd
 #include "nk.h"
 
 struct fps_counter {
