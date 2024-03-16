@@ -19,7 +19,7 @@ int map_make_id(void) { return ++id; }
 
 struct map *map_create(void)
 {
-    struct map *map = malloc(sizeof *map);
+    struct map *map = SDL_calloc(1, sizeof(*map));
     if (map == NULL)
         return NULL;
 
