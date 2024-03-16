@@ -1,5 +1,3 @@
-#include <stdlib.h>
-
 #include "SDL.h" // IWYU pragma: keep //clangd
 
 #define NK_IMPLEMENTATION
@@ -26,7 +24,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
 
     if (win == NULL) {
         SDL_Log("Error SDL_CreateWindow %s", SDL_GetError());
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     renderer = SDL_CreateRenderer(
@@ -35,7 +33,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
     if (renderer == NULL) {
         SDL_Log("Error SDL_CreateRenderer %s", SDL_GetError());
         SDL_DestroyWindow(win);
-        exit(EXIT_FAILURE);
+        return 1;
     }
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
@@ -51,11 +49,11 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
         nk_style_set_font(ctx, &font->handle);
     }
 
-    int exit_status = EXIT_SUCCESS;
+    int exit_status = 0;
 
     if (!app_init(&app, renderer)) {
         SDL_Log("Failed to create app.");
-        exit_status = EXIT_FAILURE;
+        exit_status = 1;
         goto cleanup;
     }
 
@@ -82,7 +80,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
         SDL_GL_GetDrawableSize(win, &app.screen_width, &app.screen_height);
         if (!app_run(&app, ctx)) {
             SDL_Log("Failed to run app.");
-            exit_status = EXIT_FAILURE;
+            exit_status = 1;
             goto cleanup;
         };
 
